@@ -25,36 +25,43 @@ const UserContextKey contextKey = "user"
 func Auth(authService *service.AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// 1. Get Authorization header
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				utils.WriteError(w, http.StatusUnauthorized, "Missing authorization header", nil)
+			// 1. Try to get token dari httpOnly cookie terlebih dahulu
+			token := ""
+			if cookie, err := r.Cookie("auth_token"); err == nil {
+				token = cookie.Value
+			}
+
+			// 2. Fallback: get dari Authorization header (untuk backward compatibility)
+			if token == "" {
+				authHeader := r.Header.Get("Authorization")
+				if authHeader != "" {
+					// Format: "Bearer <token>"
+					parts := strings.Split(authHeader, " ")
+					if len(parts) == 2 && parts[0] == "Bearer" {
+						token = parts[1]
+					}
+				}
+			}
+
+			// 3. Check apakah token ada
+			if token == "" {
+				utils.WriteError(w, http.StatusUnauthorized, "Missing authentication token", nil)
 				return
 			}
 
-			// 2. Extract token dari header
-			// Format: "Bearer <token>"
-			parts := strings.Split(authHeader, " ")
-			if len(parts) != 2 || parts[0] != "Bearer" {
-				utils.WriteError(w, http.StatusUnauthorized, "Invalid authorization header format", nil)
-				return
-			}
-
-			token := parts[1]
-
-			// 3. Validate token menggunakan service
+			// 4. Validate token menggunakan service
 			user, err := authService.ValidateToken(token)
 			if err != nil {
 				utils.WriteError(w, http.StatusUnauthorized, "Invalid or expired token", err)
 				return
 			}
 
-			// 4. Store user data di context
+			// 5. Store user data di context
 			// Context adalah cara di Go untuk pass data antar middleware & handler
 			ctx := context.WithValue(r.Context(), UserContextKey, user)
 			r = r.WithContext(ctx)
 
-			// 5. Lanjut ke handler berikutnya
+			// 6. Lanjut ke handler berikutnya
 			next.ServeHTTP(w, r)
 		})
 	}

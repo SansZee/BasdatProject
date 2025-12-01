@@ -24,12 +24,8 @@ export interface User {
 }
 
 export interface AuthResponse {
-  success: boolean;
-  message: string;
-  data: {
-    user: User;
-    token: string;
-  };
+  user: User;
+  token: string;
 }
 
 // API calls
@@ -37,18 +33,23 @@ export const authAPI = {
   // Register
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     const response = await axiosInstance.post('/auth/register', data);
-    return response.data;
+    return response.data.data;
   },
 
   // Login
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await axiosInstance.post('/auth/login', data);
-    return response.data;
+    return response.data.data;
   },
 
   // Get profile
-  getProfile: async (): Promise<any> => {
+  getProfile: async (): Promise<User> => {
     const response = await axiosInstance.get('/auth/profile');
-    return response.data;
+    return response.data.data;
+  },
+
+  // Logout
+  logout: async (): Promise<void> => {
+    await axiosInstance.post('/auth/logout', {});
   },
 };

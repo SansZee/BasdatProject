@@ -1,21 +1,7 @@
 // Storage keys
-const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
 
-// Token management
-export const getToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
-};
-
-export const setToken = (token: string): void => {
-  localStorage.setItem(TOKEN_KEY, token);
-};
-
-export const removeToken = (): void => {
-  localStorage.removeItem(TOKEN_KEY);
-};
-
-// User management
+// User management (hanya simpan user data, bukan token)
 export const getUser = (): any | null => {
   const userStr = localStorage.getItem(USER_KEY);
   if (userStr) {
@@ -37,12 +23,7 @@ export const removeUser = (): void => {
 };
 
 // Clear all auth data (logout)
+// Token dihapus otomatis dari httpOnly cookie oleh server
 export const clearAuth = (): void => {
-  removeToken();
   removeUser();
-};
-
-// Check authentication
-export const isAuthenticated = (): boolean => {
-  return !!getToken();
 };

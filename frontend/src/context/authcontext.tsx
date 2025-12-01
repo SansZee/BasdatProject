@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../api/auth';
-import { getToken, getUser, setToken, setUser, clearAuth } from '../utils/storage';
+import { getUser, setUser, clearAuth } from '../utils/storage';
+import { authAPI } from '../api/auth';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
+  login: (user: User) => void;
   logout: () => void;
   loading: boolean;
 }
@@ -15,42 +15,61 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
-  const [token, setTokenState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasValidated, setHasValidated] = useState(false);
 
-  // Load auth data dari localStorage saat app start
+  // Validate auth saat app start dengan memanggil /api/auth/profile
   useEffect(() => {
-    const storedToken = getToken();
-    const storedUser = getUser();
+    if (hasValidated) return; // Prevent multiple calls
 
-    if (storedToken && storedUser) {
-      setTokenState(storedToken);
-      setUserState(storedUser);
-    }
-    
-    setLoading(false);
-  }, []);
+    const validateAuth = async () => {
+      try {
+        // Try to get profile dari server
+        // Jika success, user sudah authenticated
+        // Token akan otomatis dikirim dari httpOnly cookie oleh browser
+        const profile = await authAPI.getProfile();
+        setUserState(profile);
+        
+        // Save user data ke localStorage (tapi bukan token!)
+        setUser(profile);
+      } catch (error) {
+        // Jika error 401, berarti tidak ada valid token
+        // Ini normal untuk first-time user yang belum login
+        clearAuth();
+      } finally {
+        setLoading(false);
+        setHasValidated(true);
+      }
+    };
+
+    validateAuth();
+  }, [hasValidated]);
 
   // Login function
-  const login = (userData: User, userToken: string) => {
+  const login = (userData: User) => {
     setUserState(userData);
-    setTokenState(userToken);
     setUser(userData);
-    setToken(userToken);
+    // Token sudah di-set sebagai httpOnly cookie oleh backend
+    // Tidak perlu disimpan di sini
   };
 
   // Logout function
-  const logout = () => {
+  const logout = async () => {
     setUserState(null);
-    setTokenState(null);
     clearAuth();
+    try {
+      // Call logout endpoint to clear httpOnly cookie
+      await authAPI.logout();
+    } catch (error) {
+      // Ignore error, proceed to login page anyway
+      console.error('Logout error:', error);
+    }
     window.location.href = '/login';
   };
 
   const value = {
     user,
-    token,
-    isAuthenticated: !!token,
+    isAuthenticated: !!user,
     login,
     logout,
     loading,

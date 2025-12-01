@@ -36,40 +36,53 @@ func main() {
 
 	// 3. Initialize repositories
 	userRepo := repository.NewUserRepository(db)
+	titleRepo := repository.NewTitleRepository(db)
 
 	// 4. Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
 
 	// 5. Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
+	titleHandler := handler.NewTitleHandler(titleRepo)
 
 	// 6. Setup router
 	router := mux.NewRouter()
 
-	// 7. Apply global middlewares (untuk semua routes)
+	// 7. Create rate limiter (10 requests per minute per IP)
+	rateLimiter := middleware.NewRateLimiter(10, 1) // 10 requests per 1 minute
+
+	// 8. Apply global middlewares (untuk semua routes)
+	router.Use(middleware.SecureHeaders())                          // Add security headers
 	router.Use(middleware.CORS(cfg.CORS.AllowedOrigins))
+	router.Use(middleware.RateLimitMiddleware(rateLimiter))         // Rate limiting
+	router.Use(middleware.CSRFProtection())                          // CSRF protection
 	router.Use(middleware.Logger)
 
-	// 8. Public routes (tidak butuh authentication)
-	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST")
-	router.HandleFunc("/api/auth/login", authHandler.Login).Methods("POST")
-
-	// 9. Protected routes (butuh JWT token)
+	// 9. Public routes (tidak butuh authentication)
+	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/auth/login", authHandler.Login).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/titles/trending", titleHandler.GetTrendingTitles).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/titles/top-rated", titleHandler.GetTopRatedTitles).Methods("GET", "OPTIONS")
+	
+	// 10. Protected routes (butuh JWT token)
 	// Wrap handler dengan Auth middleware
 	protectedRouter := router.PathPrefix("/api").Subrouter()
 	protectedRouter.Use(middleware.Auth(authService))
 
 	// Profile endpoint (semua authenticated user bisa akses)
-	protectedRouter.HandleFunc("/auth/profile", authHandler.GetProfile).Methods("GET")
+	protectedRouter.HandleFunc("/auth/profile", authHandler.GetProfile).Methods("GET", "OPTIONS")
+
+	// Logout endpoint (protected)
+	protectedRouter.HandleFunc("/auth/logout", authHandler.Logout).Methods("POST", "OPTIONS")
 
 	// Health check endpoint (untuk monitoring)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status": "healthy", "message": "API is running"}`))
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
-	// 10. Start server
+	// 11. Start server
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	fmt.Printf("\n🎉 Server is running on http://%s\n", addr)
 	fmt.Println("📚 Available endpoints:")

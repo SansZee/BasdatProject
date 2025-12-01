@@ -1,19 +1,35 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { HomePage } from './pages/HomePage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { ProtectedRoute } from './components/shared/ProtectedRoute';
+
 function App() {
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-accent mb-4">
-          Film Dashboard
-        </h1>
-        <p className="text-light text-xl">
-          Tailwind CSS is working! 🎉
-        </p>
-        <button className="btn-primary mt-6">
-          Test Button
-        </button>
-      </div>
-    </div>
-  )
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* Protected Routes - Coming Soon */}
+          {/* 
+          <Route 
+            path="/executive/dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['executive']}>
+                <ExecutiveDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          */}
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

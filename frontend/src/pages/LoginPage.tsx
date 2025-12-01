@@ -16,20 +16,39 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const validateForm = (): string | null => {
+    if (!formData.username.trim()) {
+      return 'Username is required';
+    }
+    if (!formData.password) {
+      return 'Password is required';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate form first
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Call API login
       const response = await authAPI.login(formData);
       
-      // Save to context & localStorage
-      login(response.data.user, response.data.token);
+      // Save user data to context & localStorage
+      // Token sudah di-set sebagai httpOnly cookie oleh backend
+      login(response);
       
       // Redirect based on role
-      const role = response.data.user.role_name;
+      const role = response.role_name;
       if (role === 'executive') {
         navigate('/executive/dashboard');
       } else if (role === 'production') {

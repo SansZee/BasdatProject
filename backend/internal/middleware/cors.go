@@ -2,29 +2,38 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 )
 
-// CORS adalah middleware untuk handle Cross-Origin Resource Sharing
-// Tanpa ini, frontend (React di localhost:3000) tidak bisa akses API (Go di localhost:8080)
-// Browser akan block request karena "different origin"
+// CORS middleware - handles preflight dan actual CORS requests
 func CORS(allowedOrigins string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Set CORS headers
-			// Header ini kasih tau browser: "Frontend dari origin ini boleh akses API"
-			w.Header().Set("Access-Control-Allow-Origin", allowedOrigins)
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			origin := r.Header.Get("Origin")
+			
+			// For development: allow all origins. For production: validate against allowedOrigins
+			if origin != "" {
+				// Development: accept all origins
+				if allowedOrigins == "" || strings.Contains(allowedOrigins, "localhost") {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+				} else if origin == allowedOrigins {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+				}
+			}
+			
+			// Set required CORS headers
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-			// Handle preflight request
-			// Browser kirim OPTIONS request dulu sebelum request asli (untuk check CORS)
+			w.Header().Set("Access-Control-Max-Age", "3600")
+			
+			// Handle preflight OPTIONS request
 			if r.Method == "OPTIONS" {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
-
-			// Lanjut ke handler berikutnya
+			
+			// Continue to next handler
 			next.ServeHTTP(w, r)
 		})
 	}

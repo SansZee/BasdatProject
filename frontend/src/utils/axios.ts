@@ -1,36 +1,29 @@
 import axios from 'axios';
-import { getToken, clearAuth } from './storage';
+import { clearAuth } from './storage';
 
-// Bikin axios instance dengan base URL
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  // Fix: Type assertion untuk Vite env
+  baseURL: (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
+  // IMPORTANT: Enable cookies di request (untuk httpOnly JWT auth_token)
+  withCredentials: true,
 });
-
-// Request interceptor - tambahkan token otomatis
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Response interceptor - handle error global
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Kalau token expired/invalid, auto logout
+    // Kalau token expired/invalid pada protected routes, auto logout
+    // Tapi jangan redirect untuk initial auth check (getProfile call pada startup)
     if (error.response?.status === 401) {
-      clearAuth();
-      window.location.href = '/login';
+      // Only redirect if sudah authenticated sebelumnya (ada user di localStorage)
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        clearAuth();
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
