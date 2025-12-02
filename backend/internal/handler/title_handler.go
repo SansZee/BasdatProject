@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -90,4 +91,88 @@ func (h *TitleHandler) GetTopRatedTitles(w http.ResponseWriter, r *http.Request)
 
 	// 5. Return success response
 	utils.WriteSuccess(w, "Top-rated titles retrieved successfully", titles)
+}
+
+// SearchTitles adalah handler untuk endpoint GET /api/titles/search
+// Query param: q (search keyword) - required
+// Return: array of matching titles
+func (h *TitleHandler) SearchTitles(w http.ResponseWriter, r *http.Request) {
+	// 1. Handle CORS preflight OPTIONS request
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// 2. Check method GET
+	if r.Method != http.MethodGet {
+		utils.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	// 3. Get search keyword dari query param
+	keyword := r.URL.Query().Get("q")
+	if keyword == "" {
+		utils.WriteError(w, http.StatusBadRequest, "Search keyword (q) is required", nil)
+		return
+	}
+
+	fmt.Println("=== SEARCH REQUEST ===")
+	fmt.Printf("Endpoint: /api/titles/search\n")
+	fmt.Printf("Query Param 'q': %s\n", keyword)
+
+	// 4. Call repository untuk search titles
+	titles, err := h.titleRepo.SearchTitles(keyword)
+	if err != nil {
+		fmt.Printf("❌ Handler Error: %v\n", err)
+		utils.WriteError(w, http.StatusInternalServerError, "Failed to search titles", err)
+		return
+	}
+
+	// 5. Return success response
+	fmt.Printf("📤 Returning %d results to frontend\n", len(titles))
+	fmt.Println("====================\n")
+	utils.WriteSuccess(w, "Search results retrieved successfully", titles)
+}
+
+// GetTitleDetail adalah handler untuk endpoint GET /api/titles/{id}/detail
+// Path param: id (title_id)
+// Return: TitleDetailResponse dengan semua informasi detail
+func (h *TitleHandler) GetTitleDetail(w http.ResponseWriter, r *http.Request) {
+	// 1. Handle CORS preflight OPTIONS request
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// 2. Check method GET
+	if r.Method != http.MethodGet {
+		utils.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	// 3. Get title_id dari URL path
+	// Path format: /api/titles/{id}/detail
+	titleID := r.URL.Path[len("/api/titles/"):]
+	titleID = titleID[:len(titleID)-len("/detail")]
+
+	if titleID == "" {
+		utils.WriteError(w, http.StatusBadRequest, "Title ID is required", nil)
+		return
+	}
+
+	fmt.Println("=== GET TITLE DETAIL REQUEST ===")
+	fmt.Printf("Endpoint: /api/titles/%s/detail\n", titleID)
+
+	// 4. Call repository untuk get title detail
+	detail, err := h.titleRepo.GetTitleDetail(titleID)
+	if err != nil {
+		fmt.Printf("❌ Handler Error: %v\n", err)
+		utils.WriteError(w, http.StatusInternalServerError, "Failed to fetch title detail", err)
+		return
+	}
+
+	// 5. Return success response
+	fmt.Printf("📤 Returning detail for title: %s\n", titleID)
+	fmt.Println("================================\n")
+	utils.WriteSuccess(w, "Title detail retrieved successfully", detail)
 }

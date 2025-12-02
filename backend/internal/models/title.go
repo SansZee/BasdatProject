@@ -15,6 +15,14 @@ type TrendingTitle struct {
 	GenreName   string  `json:"genre_name"`
 }
 
+// SearchTitle merepresentasikan hasil search dari sp_SearchTitles
+type SearchTitle struct {
+	TitleID     *string  `json:"title_id"`     // Nullable
+	Name        *string  `json:"name"`         // Nullable
+	Overview    *string  `json:"overview"`     // Nullable
+	VoteAverage *float64 `json:"vote_average"` // Nullable
+}
+
 // Actor merepresentasikan data actor dari database
 type Actor struct {
 	ActorID     int       // actor_id (Primary Key)

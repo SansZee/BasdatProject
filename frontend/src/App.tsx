@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { TitleDetailPage } from './pages/TitleDetailPage';
 import { ProtectedRoute } from './components/shared/ProtectedRoute';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/titles/:id" element={<TitleDetailPage />} />
 
           {/* Protected Routes - Coming Soon */}
           {/* 

@@ -52,10 +52,10 @@ func main() {
 	rateLimiter := middleware.NewRateLimiter(10, 1) // 10 requests per 1 minute
 
 	// 8. Apply global middlewares (untuk semua routes)
-	router.Use(middleware.SecureHeaders())                          // Add security headers
+	router.Use(middleware.SecureHeaders()) // Add security headers
 	router.Use(middleware.CORS(cfg.CORS.AllowedOrigins))
-	router.Use(middleware.RateLimitMiddleware(rateLimiter))         // Rate limiting
-	router.Use(middleware.CSRFProtection())                          // CSRF protection
+	router.Use(middleware.RateLimitMiddleware(rateLimiter)) // Rate limiting
+	router.Use(middleware.CSRFProtection())                 // CSRF protection
 	router.Use(middleware.Logger)
 
 	// 9. Public routes (tidak butuh authentication)
@@ -63,7 +63,9 @@ func main() {
 	router.HandleFunc("/api/auth/login", authHandler.Login).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/titles/trending", titleHandler.GetTrendingTitles).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/titles/top-rated", titleHandler.GetTopRatedTitles).Methods("GET", "OPTIONS")
-	
+	router.HandleFunc("/api/titles/search", titleHandler.SearchTitles).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/titles/{id}/detail", titleHandler.GetTitleDetail).Methods("GET", "OPTIONS")
+
 	// 10. Protected routes (butuh JWT token)
 	// Wrap handler dengan Auth middleware
 	protectedRouter := router.PathPrefix("/api").Subrouter()
