@@ -37,13 +37,16 @@ func main() {
 	// 3. Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	titleRepo := repository.NewTitleRepository(db)
+	reviewRepo := repository.NewReviewRepository(db)
 
 	// 4. Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
+	reviewService := service.NewReviewService(reviewRepo)
 
 	// 5. Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
 	titleHandler := handler.NewTitleHandler(titleRepo)
+	reviewHandler := handler.NewReviewHandler(reviewService)
 
 	// 6. Setup router
 	router := mux.NewRouter()
@@ -64,18 +67,39 @@ func main() {
 	router.HandleFunc("/api/titles/trending", titleHandler.GetTrendingTitles).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/titles/top-rated", titleHandler.GetTopRatedTitles).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/titles/search", titleHandler.SearchTitles).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/titles/filter-options", titleHandler.GetFilterOptions).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/titles/filter", titleHandler.FilterTitles).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/titles/{id}/detail", titleHandler.GetTitleDetail).Methods("GET", "OPTIONS")
+	
+	// Reviews public routes
+	router.HandleFunc("/api/reviews/{title}", reviewHandler.GetReviewsByTitle).Methods("GET", "OPTIONS")
 
 	// 10. Protected routes (butuh JWT token)
-	// Wrap handler dengan Auth middleware
-	protectedRouter := router.PathPrefix("/api").Subrouter()
+	// Wrap handler dengan Auth middleware - HANYA untuk /api/auth/* paths
+	protectedRouter := router.PathPrefix("/api/auth").Subrouter()
 	protectedRouter.Use(middleware.Auth(authService))
 
 	// Profile endpoint (semua authenticated user bisa akses)
-	protectedRouter.HandleFunc("/auth/profile", authHandler.GetProfile).Methods("GET", "OPTIONS")
+	protectedRouter.HandleFunc("/profile", authHandler.GetProfile).Methods("GET", "OPTIONS")
 
 	// Logout endpoint (protected)
-	protectedRouter.HandleFunc("/auth/logout", authHandler.Logout).Methods("POST", "OPTIONS")
+	protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST", "OPTIONS")
+
+	// 11. Protected reviews routes (butuh JWT token)
+	protectedReviewRouter := router.PathPrefix("/api/reviews").Subrouter()
+	protectedReviewRouter.Use(middleware.Auth(authService))
+
+	// Create/Update review
+	protectedReviewRouter.HandleFunc("", reviewHandler.CreateOrUpdateReview).Methods("POST", "OPTIONS")
+
+	// Get user's reviews
+	protectedReviewRouter.HandleFunc("/user", reviewHandler.GetUserReviews).Methods("GET", "OPTIONS")
+
+	// Check if user reviewed a title
+	protectedReviewRouter.HandleFunc("/check/{title}", reviewHandler.GetUserReviewForTitle).Methods("GET", "OPTIONS")
+
+	// Delete review
+	protectedReviewRouter.HandleFunc("/{id}", reviewHandler.DeleteReview).Methods("DELETE", "OPTIONS")
 
 	// Health check endpoint (untuk monitoring)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

@@ -51,7 +51,7 @@ BEGIN
     SET @search = '"' + @keyword + '"';
 
     SET @sql = '
-        SELECT TOP 15
+        SELECT TOP 24
             title_id,
             name,
             overview,
@@ -70,11 +70,11 @@ EXEC sp_SearchTitles 'breaking bad';
 SELECT FULLTEXTCATALOGPROPERTY('FTCatalog_Titles', 'PopulateStatus') AS status;
 use INTEGRASI_DB
 -- Detail
-CREATE OR ALTER PROCEDURE sp_GetTitleDetail
+ALTER PROCEDURE sp_GetTitleDetail
     @title_id NVARCHAR(40)
 AS
 BEGIN
-    SET NOCOUNT ON;
+    SET NOCOUNT OFF;
 
     -----------------------------------------------------
     -- 1. DETAIL UTAMA TITLE
@@ -181,7 +181,7 @@ BEGIN
 END
 GO
 select * from titles where name= 'Breaking Bad'
-EXEC sp_GetTitleDetail @title_id = 'tt1234567';
+EXEC sp_GetTitleDetail @title_id = '1396';
 SELECT 
     t.*,
     ty.type_name,
@@ -190,3 +190,4 @@ FROM titles t
 LEFT JOIN types ty ON t.type_id = ty.type_id
 LEFT JOIN status s ON t.status_id = s.status_id
 WHERE t.title_id = '1396';
+EXEC sp_GetTitleDetail @title_id = 'tt11126994'

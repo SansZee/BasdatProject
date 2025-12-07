@@ -116,7 +116,7 @@ func (c *Config) GetConnectionString() string {
 	// Format connection string untuk go-mssqldb:
 	// sqlserver://username:password@host:port?database=dbname
 	return fmt.Sprintf(
-		"server=%s;user id=%s;password=%s;port=%d;database=%s;encrypt=disable",
+		"server=%s;user id=%s;password=%s;port=%d;database=%s;encrypt=disable;MultipleActiveResultSets=true",
 		c.Database.Server,
 		c.Database.User,
 		c.Database.Password,

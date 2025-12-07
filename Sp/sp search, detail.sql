@@ -74,7 +74,7 @@ CREATE OR ALTER PROCEDURE sp_GetTitleDetail
     @title_id NVARCHAR(40)
 AS
 BEGIN
-    SET NOCOUNT ON;
+    SET NOCOUNT OFF;
 
     -----------------------------------------------------
     -- 1. DETAIL UTAMA TITLE

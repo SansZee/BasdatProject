@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Navigation } from '../components/shared/Navigation';
 import { ArrowLeft, Star, Clock, Calendar, Users } from 'lucide-react';
 import { titlesAPI, TitleDetailResponse } from '../api/titles';
+import { ReviewSection } from '../components/ReviewSection';
 
 export function TitleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -10,6 +11,7 @@ export function TitleDetailPage() {
   const [detail, setDetail] = useState<TitleDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'info' | 'cast' | 'reviews'>('info');
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -196,96 +198,136 @@ export function TitleDetailPage() {
         </div>
       </div>
 
-      {/* Content Sections */}
+      {/* Tabs Navigation */}
+      <div className="max-w-[1600px] mx-auto px-8">
+        <div className="flex gap-8 border-b border-gray-600">
+          <button
+            onClick={() => setActiveTab('info')}
+            className={`py-4 px-2 font-semibold transition-colors ${
+              activeTab === 'info'
+                ? 'text-accent border-b-2 border-accent -mb-px'
+                : 'text-gray-400 hover:text-light'
+            }`}
+          >
+            Info
+          </button>
+          <button
+            onClick={() => setActiveTab('cast')}
+            className={`py-4 px-2 font-semibold transition-colors ${
+              activeTab === 'cast'
+                ? 'text-accent border-b-2 border-accent -mb-px'
+                : 'text-gray-400 hover:text-light'
+            }`}
+          >
+            Cast & Crew
+          </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`py-4 px-2 font-semibold transition-colors ${
+              activeTab === 'reviews'
+                ? 'text-accent border-b-2 border-accent -mb-px'
+                : 'text-gray-400 hover:text-light'
+            }`}
+          >
+            Reviews
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Content */}
       <div className="max-w-[1600px] mx-auto px-8 py-16">
-        {/* Genres */}
-        {detail.genres && detail.genres.length > 0 && (
-          <section className="mb-16">
-            <h2 className="text-light text-2xl font-bold mb-6">Genres</h2>
-            <div className="flex flex-wrap gap-3">
-              {detail.genres.map((genre, idx) => (
-                <span
-                  key={idx}
-                  className="px-4 py-2 bg-accent/20 border border-accent text-accent rounded-full"
-                >
-                  {genre.genre_name || 'Unknown'}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Languages */}
-        {detail.languages && detail.languages.length > 0 && (
-          <section className="mb-16">
-            <h2 className="text-light text-2xl font-bold mb-6">Languages</h2>
-            <div className="flex flex-wrap gap-3">
-              {detail.languages.map((lang, idx) => (
-                <span
-                  key={idx}
-                  className="px-4 py-2 bg-secondary border border-gray-600 text-light rounded"
-                >
-                  {lang.language_name || 'Unknown'}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Production Countries */}
-        {detail.countries && detail.countries.length > 0 && (
-          <section className="mb-16">
-            <h2 className="text-light text-2xl font-bold mb-6">Production Countries</h2>
-            <div className="flex flex-wrap gap-3">
-              {detail.countries.map((country, idx) => (
-                <span
-                  key={idx}
-                  className="px-4 py-2 bg-secondary border border-gray-600 text-light rounded"
-                >
-                  {country.country_name || 'Unknown'}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Production Companies */}
-        {detail.companies && detail.companies.length > 0 && (
-          <section className="mb-16">
-            <h2 className="text-light text-2xl font-bold mb-6">Production Companies</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {detail.companies.map((company, idx) => (
-                <div key={idx} className="p-4 bg-secondary border border-gray-600 rounded">
-                  <p className="text-light font-semibold">
-                    {company.company_name || 'Unknown Company'}
-                  </p>
+        {/* Info Tab */}
+        {activeTab === 'info' && (
+          <div>
+            {/* Genres */}
+            {detail.genres && detail.genres.length > 0 && (
+              <section className="mb-16">
+                <h2 className="text-light text-2xl font-bold mb-6">Genres</h2>
+                <div className="flex flex-wrap gap-3">
+                  {detail.genres.map((genre, idx) => (
+                    <span
+                      key={idx}
+                      className="px-4 py-2 bg-accent/20 border border-accent text-accent rounded-full"
+                    >
+                      {genre.genre_name || 'Unknown'}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              </section>
+            )}
+
+            {/* Languages */}
+            {detail.languages && detail.languages.length > 0 && (
+              <section className="mb-16">
+                <h2 className="text-light text-2xl font-bold mb-6">Languages</h2>
+                <div className="flex flex-wrap gap-3">
+                  {detail.languages.map((lang, idx) => (
+                    <span
+                      key={idx}
+                      className="px-4 py-2 bg-secondary border border-gray-600 text-light rounded"
+                    >
+                      {lang.language_name || 'Unknown'}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Production Countries */}
+            {detail.countries && detail.countries.length > 0 && (
+              <section className="mb-16">
+                <h2 className="text-light text-2xl font-bold mb-6">Production Countries</h2>
+                <div className="flex flex-wrap gap-3">
+                  {detail.countries.map((country, idx) => (
+                    <span
+                      key={idx}
+                      className="px-4 py-2 bg-secondary border border-gray-600 text-light rounded"
+                    >
+                      {country.country_name || 'Unknown'}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Production Companies */}
+            {detail.companies && detail.companies.length > 0 && (
+              <section className="mb-16">
+                <h2 className="text-light text-2xl font-bold mb-6">Production Companies</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {detail.companies.map((company, idx) => (
+                    <div key={idx} className="p-4 bg-secondary border border-gray-600 rounded">
+                      <p className="text-light font-semibold">
+                        {company.company_name || 'Unknown Company'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Networks */}
+            {detail.networks && detail.networks.length > 0 && (
+              <section className="mb-16">
+                <h2 className="text-light text-2xl font-bold mb-6">Networks</h2>
+                <div className="flex flex-wrap gap-3">
+                  {detail.networks.map((network, idx) => (
+                    <span
+                      key={idx}
+                      className="px-4 py-2 bg-secondary border border-gray-600 text-light rounded"
+                    >
+                      {network.network_name || 'Unknown'}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
         )}
 
-        {/* Networks */}
-        {detail.networks && detail.networks.length > 0 && (
-          <section className="mb-16">
-            <h2 className="text-light text-2xl font-bold mb-6">Networks</h2>
-            <div className="flex flex-wrap gap-3">
-              {detail.networks.map((network, idx) => (
-                <span
-                  key={idx}
-                  className="px-4 py-2 bg-secondary border border-gray-600 text-light rounded"
-                >
-                  {network.network_name || 'Unknown'}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Cast & Crew */}
-        {detail.cast_and_crew && detail.cast_and_crew.length > 0 && (
-          <section className="mb-16">
-            <h2 className="text-light text-2xl font-bold mb-6">Cast & Crew</h2>
+        {/* Cast & Crew Tab */}
+        {activeTab === 'cast' && detail.cast_and_crew && detail.cast_and_crew.length > 0 && (
+          <section>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {detail.cast_and_crew.slice(0, 12).map((person, idx) => (
                 <div key={idx} className="p-4 bg-secondary border border-gray-600 rounded">
@@ -310,6 +352,9 @@ export function TitleDetailPage() {
             )}
           </section>
         )}
+
+        {/* Reviews Tab */}
+        {activeTab === 'reviews' && id && <ReviewSection titleId={id} />}
       </div>
     </div>
   );

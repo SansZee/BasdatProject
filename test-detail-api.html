@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Detail API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        input {
+            padding: 10px;
+            width: 300px;
+            margin: 10px 0;
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            background: #2a2a2a;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        pre {
+            overflow-x: auto;
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        .status-ok {
+            background: #155724;
+        }
+        .status-error {
+            background: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Test Detail API</h1>
+        
+        <div>
+            <p>Enter a title ID to test the detail endpoint:</p>
+            <input type="text" id="titleId" placeholder="e.g., tt0103064 or 1" value="">
+            <button onclick="testAPI()">Test API</button>
+            <button onclick="getFirstTitle()">Get First Title ID</button>
+        </div>
+
+        <div id="response" class="response" style="display:none;">
+            <h2>Response:</h2>
+            <div id="status"></div>
+            <div id="content"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        async function getFirstTitle() {
+            console.log('Fetching first title from trending endpoint...');
+            try {
+                const response = await fetch(`${API_BASE}/titles/trending?limit=1`);
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (data.data && data.data.length > 0) {
+                    const titleId = data.data[0].title_id;
+                    document.getElementById('titleId').value = titleId;
+                    showMessage(`Found title: ${data.data[0].name} (${titleId})`, 'success');
+                    await new Promise(r => setTimeout(r, 500));
+                    testAPI();
+                } else {
+                    showMessage('No titles found. Database might be empty.', 'error');
+                }
+            } catch (err) {
+                showMessage(`Error getting first title: ${err.message}`, 'error');
+            }
+        }
+
+        async function testAPI() {
+            const titleId = document.getElementById('titleId').value.trim();
+            
+            if (!titleId) {
+                showMessage('Please enter a title ID', 'error');
+                return;
+            }
+
+            const responseDiv = document.getElementById('response');
+            const statusDiv = document.getElementById('status');
+            const contentDiv = document.getElementById('content');
+            
+            responseDiv.style.display = 'block';
+            statusDiv.innerHTML = '<p class="info">🔄 Loading...</p>';
+            contentDiv.innerHTML = '';
+
+            try {
+                console.log(`\n🌐 Testing API: GET /api/titles/${titleId}/detail`);
+                const response = await fetch(`${API_BASE}/titles/${titleId}/detail`);
+                
+                console.log(`Response Status: ${response.status}`);
+                const text = await response.text();
+                let data;
+                
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    statusDiv.innerHTML = `<div class="status status-error">⚠️ Invalid JSON Response</div>`;
+                    contentDiv.innerHTML = `<pre>${text}</pre>`;
+                    return;
+                }
+
+                console.log('Full Response:', data);
+
+                if (response.ok && data.success) {
+                    statusDiv.innerHTML = `<div class="status status-ok">✅ Success (${response.status})</div>`;
+                    
+                    const detail = data.data?.detail;
+                    if (!detail) {
+                        contentDiv.innerHTML = '<p class="error">⚠️ No detail data in response</p>';
+                        contentDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                        return;
+                    }
+
+                    let html = `
+                        <h3>📽️ Title Information</h3>
+                        <table style="width:100%; border-collapse: collapse;">
+                            <tr style="background: #333;">
+                                <td style="padding: 8px; border: 1px solid #555;"><strong>Field</strong></td>
+                                <td style="padding: 8px; border: 1px solid #555;"><strong>Value</strong></td>
+                            </tr>
+                    `;
+
+                    const fields = [
+                        ['Title ID', detail.title_id],
+                        ['Name', detail.name],
+                        ['Original Name', detail.original_name],
+                        ['Overview', detail.overview ? detail.overview.substring(0, 100) + '...' : 'N/A'],
+                        ['Rating', detail.vote_average ? `${detail.vote_average}/10` : 'N/A'],
+                        ['Year', detail.start_year],
+                        ['Runtime', detail.runtime_minutes ? `${detail.runtime_minutes} min` : 'N/A'],
+                        ['Type', detail.type],
+                        ['Status', detail.status],
+                        ['Seasons', detail.number_of_seasons || 'N/A'],
+                        ['Episodes', detail.number_of_episodes || 'N/A'],
+                    ];
+
+                    fields.forEach(([label, value]) => {
+                        const color = value ? '#fff' : '#999';
+                        html += `<tr><td style="padding: 8px; border: 1px solid #555;">${label}</td><td style="padding: 8px; border: 1px solid #555; color: ${color};">${value || 'N/A'}</td></tr>`;
+                    });
+
+                    html += '</table>';
+
+                    // Related data counts
+                    html += `
+                        <h3 style="margin-top: 20px;">📊 Related Data</h3>
+                        <ul>
+                            <li>Genres: ${data.data?.genres?.length || 0}</li>
+                            <li>Languages: ${data.data?.languages?.length || 0}</li>
+                            <li>Countries: ${data.data?.countries?.length || 0}</li>
+                            <li>Companies: ${data.data?.companies?.length || 0}</li>
+                            <li>Networks: ${data.data?.networks?.length || 0}</li>
+                            <li>Air Dates: ${data.data?.air_dates?.length || 0}</li>
+                            <li>Cast & Crew: ${data.data?.cast_and_crew?.length || 0}</li>
+                        </ul>
+                    `;
+
+                    contentDiv.innerHTML = html;
+                } else {
+                    statusDiv.innerHTML = `<div class="status status-error">❌ Error (${response.status})</div>`;
+                    contentDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                statusDiv.innerHTML = `<div class="status status-error">❌ Error: ${err.message}</div>`;
+                contentDiv.innerHTML = `<pre>${err.stack}</pre>`;
+            }
+        }
+
+        function showMessage(message, type) {
+            const responseDiv = document.getElementById('response');
+            const statusDiv = document.getElementById('status');
+            const contentDiv = document.getElementById('content');
+            
+            responseDiv.style.display = 'block';
+            statusDiv.innerHTML = `<div class="status status-${type === 'error' ? 'error' : 'ok'}">${message}</div>`;
+            contentDiv.innerHTML = '';
+        }
+
+        // Auto-load on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded. Ready to test API.');
+            console.log('Click "Get First Title ID" to automatically find a title and test it.');
+        });
+
+        // Allow Enter key to trigger test
+        document.getElementById('titleId').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') testAPI();
+        });
+    </script>
+</body>
+</html>

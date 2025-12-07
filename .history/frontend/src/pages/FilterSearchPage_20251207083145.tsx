@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from '../components/shared/Navigation';
 import { FilterResultCard } from '../components/FilterResultCard';
-import { Film, Home } from 'lucide-react';
+import { Film, Home, ArrowLeft } from 'lucide-react';
 import { titlesAPI, FilterRequest, FilteredTitle, FilterOptionsResponse } from '../api/titles';
 
 const SORT_OPTIONS = [
@@ -12,7 +12,7 @@ const SORT_OPTIONS = [
     { id: 'rating', label: 'IMDb Rating' },
 ];
 
-export function AdvancedSearchPage() {
+export function FilterSearchPage() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingOptions, setIsLoadingOptions] = useState(true);
@@ -25,12 +25,12 @@ export function AdvancedSearchPage() {
     // Filter options dari database
     const [filterOptions, setFilterOptions] = useState<FilterOptionsResponse | null>(null);
 
-    // Filter states
+    // Filter states - multi-select arrays
     const [filters, setFilters] = useState({
-        genreId: null as string | null,
-        typeId: null as string | null,
-        statusId: null as string | null,
-        year: null as number | null,
+        genreIds: [] as string[],
+        typeIds: [] as string[],
+        statusIds: [] as string[],
+        yearIds: [] as string[],
         sortBy: 'released',
     });
 
@@ -55,7 +55,21 @@ export function AdvancedSearchPage() {
     }, []);
 
     const handleFilterChange = (key: string, value: any) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
+        if (key === 'genreIds' || key === 'typeIds' || key === 'statusIds' || key === 'yearIds') {
+            // For checkboxes - toggle item in/out of array
+            setFilters(prev => {
+                const currentArray = prev[key as keyof typeof prev] as string[];
+                if (currentArray.includes(value)) {
+                    // Remove if already selected
+                    return { ...prev, [key]: currentArray.filter(id => id !== value) };
+                } else {
+                    // Add if not selected
+                    return { ...prev, [key]: [...currentArray, value] };
+                }
+            });
+        } else {
+            setFilters(prev => ({ ...prev, [key]: value }));
+        }
         setCurrentPage(1); // Reset to page 1 when filter changes
     };
 
@@ -66,12 +80,12 @@ export function AdvancedSearchPage() {
 
         try {
             const filterRequest: FilterRequest = {
-                genreId: filters.genreId,
-                typeId: filters.typeId,
-                statusId: filters.statusId,
-                originCountryId: null,
-                productionCountryId: null,
-                year: filters.year,
+                genreIds: filters.genreIds.length > 0 ? filters.genreIds : undefined,
+                typeIds: filters.typeIds.length > 0 ? filters.typeIds : undefined,
+                statusIds: filters.statusIds.length > 0 ? filters.statusIds : undefined,
+                originCountryIds: undefined,
+                productionCountryIds: undefined,
+                year: filters.yearIds.length > 0 ? Number(filters.yearIds[0]) : undefined,
                 sortBy: filters.sortBy || 'released',
                 page,
                 limit: itemsPerPage,
@@ -100,18 +114,46 @@ export function AdvancedSearchPage() {
 
     return (
         <div className="min-h-screen bg-primary">
+            <style>{`
+                .filter-scrollable {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(248, 192, 0, 0.8) transparent;
+                }
+                .filter-scrollable::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .filter-scrollable::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .filter-scrollable::-webkit-scrollbar-thumb {
+                    background: linear-gradient(180deg, rgba(248, 192, 0, 1) 0%, rgba(248, 192, 0, 0.7) 100%);
+                    border-radius: 10px;
+                    transition: background 0.3s ease;
+                }
+                .filter-scrollable::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(180deg, rgba(255, 215, 0, 1) 0%, rgba(248, 192, 0, 0.9) 100%);
+                    box-shadow: 0 0 6px rgba(248, 192, 0, 0.5);
+                }
+            `}</style>
             <Navigation />
 
             {/* Header */}
             <div className="bg-gradient-to-b from-secondary to-primary py-12">
                 <div className="max-w-7xl mx-auto px-6">
-                    <h1 className="text-light text-4xl font-bold mb-3">Advanced Search</h1>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-gray-400 hover:text-accent transition-colors mb-4"
+                    >
+                        <ArrowLeft size={20} />
+                        <span>Back</span>
+                    </button>
+                    <h1 className="text-light text-4xl font-bold mb-3">Filter Search</h1>
                     <p className="text-gray-400">Find movies and series with filters</p>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="py-12 bg-primary">
+             <div className="pt-4 pb-8 bg-primary">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                         {/* Filter Panel */}
@@ -120,67 +162,107 @@ export function AdvancedSearchPage() {
                                 <h2 className="text-light text-xl font-bold mb-6">Filters</h2>
 
                                 {/* Genre */}
-                                <div className="mb-6">
-                                    <label className="block text-light font-semibold mb-3">Genre</label>
-                                    <select
-                                        value={filters.genreId || ''}
-                                        onChange={(e) => handleFilterChange('genreId', e.target.value || null)}
-                                        className="w-full bg-primary text-light border border-gray-600 rounded px-3 py-2 disabled:opacity-50"
-                                        disabled={isLoadingOptions}
-                                    >
-                                        <option value="">All Genres</option>
-                                        {filterOptions?.genres.map(g => (
-                                            <option key={g.genre_type_id} value={g.genre_type_id}>{g.genre_name}</option>
-                                        ))}
-                                    </select>
+                                <div className="mb-8">
+                                    <label className="block text-light font-semibold mb-4 text-sm uppercase tracking-wider">Genre</label>
+                                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 filter-scrollable">
+                                        {isLoadingOptions ? (
+                                            <p className="text-gray-400 text-sm">Loading...</p>
+                                        ) : filterOptions?.genres && filterOptions.genres.length > 0 ? (
+                                            filterOptions.genres.map(g => (
+                                                <label key={g.genre_type_id} className="flex items-center cursor-pointer group">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={filters.genreIds.includes(g.genre_type_id)}
+                                                        onChange={() => handleFilterChange('genreIds', g.genre_type_id)}
+                                                        className="w-4 h-4 rounded border-gray-500 text-accent focus:ring-2 focus:ring-accent cursor-pointer accent-accent"
+                                                    />
+                                                    <span className="ml-3 text-light text-sm group-hover:text-accent transition-colors">
+                                                        {g.genre_name}
+                                                    </span>
+                                                </label>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-400 text-sm">No genres available</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Type */}
-                                <div className="mb-6">
-                                    <label className="block text-light font-semibold mb-3">Type</label>
-                                    <select
-                                        value={filters.typeId || ''}
-                                        onChange={(e) => handleFilterChange('typeId', e.target.value || null)}
-                                        className="w-full bg-primary text-light border border-gray-600 rounded px-3 py-2 disabled:opacity-50"
-                                        disabled={isLoadingOptions}
-                                    >
-                                        <option value="">All Types</option>
-                                        {filterOptions?.types.map(t => (
-                                            <option key={t.type_id} value={t.type_id}>{t.type_name}</option>
-                                        ))}
-                                    </select>
+                                <div className="mb-8">
+                                    <label className="block text-light font-semibold mb-4 text-sm uppercase tracking-wider">Type</label>
+                                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 filter-scrollable">
+                                        {isLoadingOptions ? (
+                                            <p className="text-gray-400 text-sm">Loading...</p>
+                                        ) : filterOptions?.types && filterOptions.types.length > 0 ? (
+                                            filterOptions.types.map(t => (
+                                                <label key={t.type_id} className="flex items-center cursor-pointer group">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={filters.typeIds.includes(t.type_id)}
+                                                        onChange={() => handleFilterChange('typeIds', t.type_id)}
+                                                        className="w-4 h-4 rounded border-gray-500 text-accent focus:ring-2 focus:ring-accent cursor-pointer accent-accent"
+                                                    />
+                                                    <span className="ml-3 text-light text-sm group-hover:text-accent transition-colors">
+                                                        {t.type_name}
+                                                    </span>
+                                                </label>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-400 text-sm">No types available</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Status */}
-                                <div className="mb-6">
-                                    <label className="block text-light font-semibold mb-3">Status</label>
-                                    <select
-                                        value={filters.statusId || ''}
-                                        onChange={(e) => handleFilterChange('statusId', e.target.value || null)}
-                                        className="w-full bg-primary text-light border border-gray-600 rounded px-3 py-2 disabled:opacity-50"
-                                        disabled={isLoadingOptions}
-                                    >
-                                        <option value="">All Status</option>
-                                        {filterOptions?.statuses.map(s => (
-                                            <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
-                                        ))}
-                                    </select>
+                                <div className="mb-8">
+                                    <label className="block text-light font-semibold mb-4 text-sm uppercase tracking-wider">Status</label>
+                                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 filter-scrollable">
+                                        {isLoadingOptions ? (
+                                            <p className="text-gray-400 text-sm">Loading...</p>
+                                        ) : filterOptions?.statuses && filterOptions.statuses.length > 0 ? (
+                                            filterOptions.statuses.map(s => (
+                                                <label key={s.status_id} className="flex items-center cursor-pointer group">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={filters.statusIds.includes(s.status_id)}
+                                                        onChange={() => handleFilterChange('statusIds', s.status_id)}
+                                                        className="w-4 h-4 rounded border-gray-500 text-accent focus:ring-2 focus:ring-accent cursor-pointer accent-accent"
+                                                    />
+                                                    <span className="ml-3 text-light text-sm group-hover:text-accent transition-colors">
+                                                        {s.status_name}
+                                                    </span>
+                                                </label>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-400 text-sm">No statuses available</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Year */}
-                                <div className="mb-6">
-                                    <label className="block text-light font-semibold mb-3">Year</label>
-                                    <select
-                                        value={filters.year || ''}
-                                        onChange={(e) => handleFilterChange('year', e.target.value ? Number(e.target.value) : null)}
-                                        className="w-full bg-primary text-light border border-gray-600 rounded px-3 py-2 disabled:opacity-50"
-                                        disabled={isLoadingOptions}
-                                    >
-                                        <option value="">All Years</option>
-                                        {filterOptions?.years.map(y => (
-                                            <option key={y} value={y}>{y}</option>
-                                        ))}
-                                    </select>
+                                <div className="mb-8">
+                                    <label className="block text-light font-semibold mb-4 text-sm uppercase tracking-wider">Year</label>
+                                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 filter-scrollable">
+                                        {isLoadingOptions ? (
+                                            <p className="text-gray-400 text-sm">Loading...</p>
+                                        ) : filterOptions?.years && filterOptions.years.length > 0 ? (
+                                            filterOptions.years.map(y => (
+                                                <label key={y} className="flex items-center cursor-pointer group">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={filters.yearIds.includes(String(y))}
+                                                        onChange={() => handleFilterChange('yearIds', String(y))}
+                                                        className="w-4 h-4 rounded border-gray-500 text-accent focus:ring-2 focus:ring-accent cursor-pointer accent-accent"
+                                                    />
+                                                    <span className="ml-3 text-light text-sm group-hover:text-accent transition-colors">
+                                                        {y}
+                                                    </span>
+                                                </label>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-400 text-sm">No years available</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Sort By */}
@@ -210,13 +292,25 @@ export function AdvancedSearchPage() {
 
                         {/* Results Panel */}
                         <div className="lg:col-span-3">
-                            {error && (
+                            {isLoading && (
+                                <div className="flex items-center justify-center py-32">
+                                    <div className="text-center">
+                                        <svg className="animate-spin h-12 w-12 text-yellow-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <p className="text-gray-400 text-lg">Filtering movies...</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!isLoading && error && (
                                 <div className="bg-red-500/10 border border-red-500 text-red-500 px-6 py-4 rounded-lg mb-6">
                                     {error}
                                 </div>
                             )}
 
-                            {hasSearched && results.length > 0 ? (
+                            {!isLoading && hasSearched && results.length > 0 ? (
                                 <>
                                     <div className="mb-6">
                                         <p className="text-gray-400">
@@ -311,24 +405,24 @@ export function AdvancedSearchPage() {
                                         </div>
                                     )}
                                 </>
-                            ) : hasSearched ? (
+                            ) : !isLoading && hasSearched ? (
                                 <div className="bg-secondary border border-accent/30 rounded-lg p-12 text-center">
                                     <Film className="text-gray-500 mx-auto mb-4" size={64} />
                                     <p className="text-gray-400 text-lg mb-6">No results found with your filters</p>
                                     <button
-                                        onClick={() => navigate('/')}
+                                        onClick={() => navigate(-1)}
                                         className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-accent/90 transition-colors"
                                     >
-                                        <Home size={20} />
-                                        Back to Home
+                                        <ArrowLeft size={20} />
+                                        Go Back
                                     </button>
                                 </div>
-                            ) : (
+                            ) : !isLoading ? (
                                 <div className="text-center py-16">
                                     <Film className="text-gray-500 mx-auto mb-4" size={64} />
-                                    <p className="text-gray-400 text-lg">Use filters above and click SEARCH to find titles</p>
+                                    <p className="text-gray-400 text-lg">Use filters and click SEARCH to get the result</p>
                                 </div>
-                            )}
+                            ) : null}
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, Trash2, Send } from 'lucide-react';
+import { Trash2, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI, Review } from '../api/reviews';
 
@@ -16,7 +16,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
 
     // Form state
     const [rating, setRating] = useState(8);
-    const [comment, setComment] = useState('');
+    const [reviewText, setReviewText] = useState('');
     const [hoverRating, setHoverRating] = useState(0);
 
     // Fetch reviews
@@ -46,8 +46,8 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
             return;
         }
 
-        if (!comment.trim()) {
-            setError('Please enter a comment');
+        if (!reviewText.trim()) {
+            setError('Please enter a review');
             return;
         }
 
@@ -56,29 +56,46 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
             setError(null);
             const newReview = await reviewsAPI.createReview(titleId, {
                 rating,
-                comment,
+                review_text: reviewText,
             });
 
-            // Add new review to the list
-            setReviews([
-                {
+            // Update review list - if user already had a review, replace it; otherwise add new
+            const existingReviewIndex = reviews.findIndex(r => r.user_id === user.user_id);
+            if (existingReviewIndex >= 0) {
+                const updatedReviews = [...reviews];
+                updatedReviews[existingReviewIndex] = {
                     review_id: newReview.review_id,
                     user_id: user.user_id,
+                    username: user.username,
                     title_id: titleId,
                     rating: newReview.rating,
-                    comment: newReview.comment,
+                    review_text: newReview.review_text,
                     created_at: newReview.created_at,
                     updated_at: newReview.updated_at,
-                },
-                ...reviews,
-            ]);
+                };
+                setReviews(updatedReviews);
+            } else {
+                setReviews([
+                    {
+                        review_id: newReview.review_id,
+                        user_id: user.user_id,
+                        username: user.username,
+                        title_id: titleId,
+                        rating: newReview.rating,
+                        review_text: newReview.review_text,
+                        created_at: newReview.created_at,
+                        updated_at: newReview.updated_at,
+                    },
+                    ...reviews,
+                ]);
+            }
 
             // Clear form
             setRating(8);
-            setComment('');
+            setReviewText('');
         } catch (err) {
             console.error('Failed to submit review:', err);
-            setError('Failed to submit review. You may have already reviewed this title.');
+            setError('Failed to submit review.');
         } finally {
             setIsSubmitting(false);
         }
@@ -120,38 +137,36 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
                     {/* Rating Input */}
                     <div className="mb-6">
                         <label className="text-light font-semibold mb-3 block">
-                            Rating: {hoverRating || rating}/10
+                            Rating
                         </label>
                         <div className="flex gap-2">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                                 <button
-                                    key={star}
+                                    key={num}
                                     type="button"
-                                    onClick={() => setRating(star)}
-                                    onMouseEnter={() => setHoverRating(star)}
+                                    onClick={() => setRating(num)}
+                                    onMouseEnter={() => setHoverRating(num)}
                                     onMouseLeave={() => setHoverRating(0)}
-                                    className="transition-transform hover:scale-110"
+                                    className={`w-10 h-10 rounded-lg font-semibold text-sm transition-colors ${
+                                        num <= (hoverRating || rating)
+                                            ? 'bg-accent text-primary'
+                                            : 'bg-primary border-2 border-gray-600 text-light hover:border-accent'
+                                    }`}
                                 >
-                                    <Star
-                                        size={28}
-                                        className={`${star <= (hoverRating || rating)
-                                            ? 'fill-accent text-accent'
-                                            : 'text-gray-600'
-                                            } transition-colors`}
-                                    />
+                                    {num}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Comment Input */}
+                    {/* Review Text Input */}
                     <div className="mb-6">
                         <label className="text-light font-semibold mb-3 block">
-                            Your Comment
+                            Your Review
                         </label>
                         <textarea
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
                             placeholder="Share your thoughts about this title..."
                             className="w-full bg-primary border-2 border-gray-600 text-light rounded-lg p-4 focus:border-accent focus:outline-none transition-colors resize-none"
                             rows={4}
@@ -161,7 +176,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={isSubmitting || !comment.trim()}
+                        disabled={isSubmitting || !reviewText.trim()}
                         className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent/90 disabled:bg-accent/50 text-primary font-semibold rounded-lg transition-colors disabled:cursor-not-allowed"
                     >
                         <Send size={20} />
@@ -193,19 +208,11 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
                             className="bg-secondary border border-gray-600 rounded-lg p-6 hover:border-accent/50 transition-colors"
                         >
                             <div className="flex justify-between items-start mb-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="flex gap-1">
-                                        {[...Array(review.rating)].map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                size={16}
-                                                className="fill-accent text-accent"
-                                            />
-                                        ))}
-                                    </div>
-                                    <span className="text-accent font-semibold">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-accent font-semibold text-lg">
                                         {review.rating}/10
                                     </span>
+                                    <span className="text-gray-400 text-sm">by {review.username}</span>
                                 </div>
 
                                 {user && user.user_id === review.user_id && (
@@ -220,7 +227,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
                             </div>
 
                             <p className="text-light mb-3">
-                                {review.comment}
+                                {review.review_text}
                             </p>
 
                             <p className="text-gray-400 text-sm">

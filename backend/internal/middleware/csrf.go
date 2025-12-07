@@ -36,8 +36,12 @@ func GenerateCSRFToken() (string, error) {
 func CSRFProtection() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Exempt auth endpoints dari CSRF (protected by rate limiting & SameSite)
-			if strings.HasPrefix(r.URL.Path, "/api/auth/") {
+			// Exempt auth endpoints, titles endpoints, dan reviews endpoints dari CSRF
+			// (protected by JWT authentication & rate limiting & SameSite)
+			path := r.URL.Path
+			if strings.HasPrefix(path, "/api/auth/") || 
+			   strings.HasPrefix(path, "/api/titles/") ||
+			   strings.HasPrefix(path, "/api/reviews") {
 				next.ServeHTTP(w, r)
 				return
 			}
