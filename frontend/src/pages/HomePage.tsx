@@ -5,6 +5,7 @@ import { Navigation } from '../components/shared/Navigation';
 import { Search, TrendingUp, Star, Film, Home, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { titlesAPI, Title, SearchTitle } from '../api/titles';
+import bannerImage from '../assets/movie-posters-banner.jpg.jpg';
 
 export function HomePage() {
   const { user } = useAuth();
@@ -212,7 +213,7 @@ export function HomePage() {
       <div 
         className="relative w-full h-[65vh] bg-cover bg-center overflow-hidden"
         style={{
-          backgroundImage: 'url(/src/assets/movie-posters-banner.jpg.jpg)',
+          backgroundImage: `url(${bannerImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
