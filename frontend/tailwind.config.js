@@ -11,7 +11,10 @@ export default {
         secondary: '#1B2A41',
         accent: '#D4AF37',
         light: '#F0EAD6',
-      }
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
     },
   },
   plugins: [],
