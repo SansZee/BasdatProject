@@ -4,6 +4,8 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { TitleDetailPage } from './pages/TitleDetailPage';
+import { ExecutiveDashboard } from './pages/ExecutiveDashboard';
+import { ProductionDashboard } from './pages/ProductionDashboard';
 import { ProtectedRoute } from './components/shared/ProtectedRoute';
 
 function App() {
@@ -17,8 +19,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/titles/:id" element={<TitleDetailPage />} />
 
-          {/* Protected Routes - Coming Soon */}
-          {/* 
+          {/* Protected Routes */}
           <Route 
             path="/executive/dashboard" 
             element={
@@ -27,7 +28,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          */}
+          <Route 
+            path="/production/dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['production']}>
+                <ProductionDashboard />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

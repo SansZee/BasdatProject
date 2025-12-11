@@ -105,18 +105,12 @@ func (r *TitleRepository) GetTopRatedTitles(limit int) ([]*models.TrendingTitle,
 func (r *TitleRepository) SearchTitles(keyword string) ([]*models.SearchTitle, error) {
 	query := `EXEC sp_SearchTitles @keyword = @p1`
 
-	fmt.Printf("\n🔍 Repository: Searching for keyword: '%s'\n", keyword)
-	fmt.Printf("📝 Query: %s\n", query)
-
 	// Query returns multiple rows
 	rows, err := r.db.Query(query, keyword)
 	if err != nil {
-		fmt.Printf("❌ Database Query Error: %v\n", err)
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
 	}
 	defer rows.Close()
-
-	fmt.Println("✅ Query executed successfully")
 
 	// Slice untuk store results
 	var titles []*models.SearchTitle
@@ -133,27 +127,17 @@ func (r *TitleRepository) SearchTitles(keyword string) ([]*models.SearchTitle, e
 			&title.VoteAverage,
 		)
 		if err != nil {
-			fmt.Printf("❌ Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
 		// Append ke slice
 		titles = append(titles, &title)
-		fmt.Printf("✅ Found: %s (ID: %s, Rating: %.1f)\n", title.Name, title.TitleID, title.VoteAverage)
 	}
 
 	// Check error dari rows iteration
 	if err = rows.Err(); err != nil {
-		fmt.Printf("❌ Rows Iteration Error: %v\n", err)
 		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
-
-	fmt.Printf("📊 Total search results: %d\n\n", len(titles))
-
-	if len(titles) == 0 {
-		fmt.Printf("⚠️  No results found for '%s'\n\n", keyword)
-	}
-
 	return titles, nil
 }
 
@@ -163,12 +147,10 @@ func (r *TitleRepository) SearchTitles(keyword string) ([]*models.SearchTitle, e
 func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailResponse, error) {
 	query := `EXEC sp_GetTitleDetail @title_id = @p1`
 
-	fmt.Printf("\n📖 Getting title detail for: '%s'\n", titleID)
-
 	// Execute query yang mengembalikan multiple result sets
 	rows, err := r.db.Query(query, titleID)
+
 	if err != nil {
-		fmt.Printf("❌ Database Query Error: %v\n", err)
 		return nil, fmt.Errorf("failed to execute detail query: %w", err)
 	}
 	defer rows.Close()
@@ -204,16 +186,13 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 			&detail.Tagline,
 		)
 		if err != nil {
-			fmt.Printf("❌ Detail Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan title detail: %w", err)
 		}
 		response.Detail = detail
-		fmt.Printf("✅ Title: %s\n", *detail.Name)
 	}
 
 	// Move to next result set (Genres)
 	if !rows.NextResultSet() {
-		fmt.Println("⚠️  No more result sets")
 		return response, nil
 	}
 
@@ -222,12 +201,10 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 		genre := &models.Genre{}
 		err := rows.Scan(&genre.GenreName)
 		if err != nil {
-			fmt.Printf("❌ Genre Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan genre: %w", err)
 		}
 		response.Genres = append(response.Genres, genre)
 	}
-	fmt.Printf("✅ Found %d genres\n", len(response.Genres))
 
 	// Move to next result set (Languages)
 	if !rows.NextResultSet() {
@@ -239,12 +216,10 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 		lang := &models.Language{}
 		err := rows.Scan(&lang.LanguageName)
 		if err != nil {
-			fmt.Printf("❌ Language Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan language: %w", err)
 		}
 		response.Languages = append(response.Languages, lang)
 	}
-	fmt.Printf("✅ Found %d languages\n", len(response.Languages))
 
 	// Move to next result set (Countries)
 	if !rows.NextResultSet() {
@@ -256,12 +231,10 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 		country := &models.ProductionCountry{}
 		err := rows.Scan(&country.CountryName)
 		if err != nil {
-			fmt.Printf("❌ Country Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan country: %w", err)
 		}
 		response.Countries = append(response.Countries, country)
 	}
-	fmt.Printf("✅ Found %d countries\n", len(response.Countries))
 
 	// Move to next result set (Companies)
 	if !rows.NextResultSet() {
@@ -273,12 +246,10 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 		company := &models.ProductionCompany{}
 		err := rows.Scan(&company.CompanyName)
 		if err != nil {
-			fmt.Printf("❌ Company Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan company: %w", err)
 		}
 		response.Companies = append(response.Companies, company)
 	}
-	fmt.Printf("✅ Found %d companies\n", len(response.Companies))
 
 	// Move to next result set (Networks)
 	if !rows.NextResultSet() {
@@ -290,12 +261,10 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 		network := &models.Network{}
 		err := rows.Scan(&network.NetworkName)
 		if err != nil {
-			fmt.Printf("❌ Network Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan network: %w", err)
 		}
 		response.Networks = append(response.Networks, network)
 	}
-	fmt.Printf("✅ Found %d networks\n", len(response.Networks))
 
 	// Move to next result set (Air dates)
 	if !rows.NextResultSet() {
@@ -312,12 +281,10 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 			&airDate.EpisodeNumber,
 		)
 		if err != nil {
-			fmt.Printf("❌ Air Date Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan air date: %w", err)
 		}
 		response.AirDates = append(response.AirDates, airDate)
 	}
-	fmt.Printf("✅ Found %d air dates\n", len(response.AirDates))
 
 	// Move to next result set (Cast & Crew)
 	if !rows.NextResultSet() {
@@ -334,12 +301,10 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 			&castCrew.Characters,
 		)
 		if err != nil {
-			fmt.Printf("❌ Cast/Crew Scan Error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan cast/crew: %w", err)
 		}
 		response.CastAndCrew = append(response.CastAndCrew, castCrew)
 	}
-	fmt.Printf("✅ Found %d cast/crew members\n\n", len(response.CastAndCrew))
 
 	return response, nil
 }
