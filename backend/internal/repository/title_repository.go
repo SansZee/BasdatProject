@@ -103,13 +103,13 @@ func (r *TitleRepository) GetTrendingTitles(limit int) ([]*models.TrendingTitle,
 	defer rows.Close()
 
 	// Slice untuk store results
-	var titles []*models.TrendingTitle
+	var titles []*models.FilmCardData
 
 	// Loop through rows
 	for rows.Next() {
-		var title models.TrendingTitle
+		var title models.FilmCardData
 
-		// Scan each row
+		// Scan each row (6 columns from fnGetFilmCardDetail)
 		err := rows.Scan(
 			&title.TitleID,
 			&title.Name,
@@ -134,7 +134,7 @@ func (r *TitleRepository) GetTrendingTitles(limit int) ([]*models.TrendingTitle,
 	return titles, nil
 }
 
-func (r *TitleRepository) GetTopRatedTitles(limit int) ([]*models.TrendingTitle, error) {
+func (r *TitleRepository) GetTopRatedTitles(limit int) ([]*models.FilmCardData, error) {
 	query := `EXEC sp_getTopRated @Limit = @p1`
 
 	// Query returns multiple rows
@@ -147,13 +147,13 @@ func (r *TitleRepository) GetTopRatedTitles(limit int) ([]*models.TrendingTitle,
 	defer rows.Close()
 
 	// Slice untuk store results
-	var titles []*models.TrendingTitle
+	var titles []*models.FilmCardData
 
 	// Loop through rows
 	for rows.Next() {
-		var title models.TrendingTitle
+		var title models.FilmCardData
 
-		// Scan each row
+		// Scan each row (6 columns from fnGetFilmCardDetail)
 		err := rows.Scan(
 			&title.TitleID,
 			&title.Name,
@@ -180,8 +180,8 @@ func (r *TitleRepository) GetTopRatedTitles(limit int) ([]*models.TrendingTitle,
 
 // SearchTitles mencari titles berdasarkan keyword menggunakan sp_SearchTitles
 // Parameter: keyword (search term)
-// Return: slice dari SearchTitle dan error (kalau ada)
-func (r *TitleRepository) SearchTitles(keyword string) ([]*models.SearchTitle, error) {
+// Return: slice dari FilmCardData dan error (kalau ada)
+func (r *TitleRepository) SearchTitles(keyword string) ([]*models.FilmCardData, error) {
 	query := `EXEC sp_SearchTitles @keyword = @p1`
 
 	// Query returns multiple rows
@@ -194,18 +194,20 @@ func (r *TitleRepository) SearchTitles(keyword string) ([]*models.SearchTitle, e
 	defer rows.Close()
 
 	// Slice untuk store results
-	var titles []*models.SearchTitle
+	var titles []*models.FilmCardData
 
 	// Loop through rows
 	for rows.Next() {
-		var title models.SearchTitle
+		var title models.FilmCardData
 
-		// Scan each row (4 columns: title_id, name, overview, vote_average)
+		// Scan each row (6 columns from fnGetFilmCardDetail)
 		err := rows.Scan(
 			&title.TitleID,
 			&title.Name,
-			&title.Overview,
+			&title.StartYear,
 			&title.VoteAverage,
+			&title.VoteCount,
+			&title.GenreName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
@@ -495,7 +497,7 @@ func (r *TitleRepository) FilterTitles(
 	sortBy string,
 	offset int,
 	limit int,
-) ([]*models.FilteredTitle, int, error) {
+) ([]*models.FilmCardData, int, error) {
 	// Calculate page from offset and limit
 	// SP expects: Page parameter (1-based), not offset
 	// offset = (page - 1) * limit, so page = (offset / limit) + 1
@@ -522,7 +524,7 @@ func (r *TitleRepository) FilterTitles(
 		productionCountryID = &productionCountryIDs[0]
 	}
 
-	query := `EXEC sp_filter_titles 
+	query := `EXEC sp_filter_titles_filmcard 
 		@GenreId = @p1,
 		@TypeId = @p2,
 		@StatusId = @p3,
@@ -552,121 +554,30 @@ func (r *TitleRepository) FilterTitles(
 	fmt.Println("✅ Query executed successfully")
 
 	// Slice untuk store results (will contain exactly `limit` rows or fewer for last page)
-	var titles []*models.FilteredTitle
+	var titles []*models.FilmCardData
 
 	// Loop through rows
 	for rows.Next() {
-		var title models.FilteredTitle
+		var title models.FilmCardData
 
-		// Scan each row - match SP columns: SELECT t.* (all columns from titles table)
-		// Column order: title_id, name, number_of_seasons, number_of_episodes, overview, adult,
-		//              in_production, original_name, popularity, tagline, runtimeMinutes,
-		//              type_id, status_id, vote_count, vote_average, startYear, endYear
-		var numberOfSeasons sql.NullInt32
-		var numberOfEpisodes sql.NullInt32
-		var overview sql.NullString
-		var adult sql.NullBool
-		var inProduction sql.NullBool
-		var originalName sql.NullString
-		var popularity sql.NullInt32
-		var tagline sql.NullString
-		var runtimeMinutes sql.NullInt32
-		var typeID sql.NullString
-		var statusID sql.NullString
-		var voteCount sql.NullInt32
-		var voteAverage sql.NullFloat64
-		var startYear sql.NullInt32
-		var endYear sql.NullInt32
-
+		// Scan each row (6 columns from fnGetFilmCardDetail)
 		err := rows.Scan(
 			&title.TitleID,
 			&title.Name,
-			&numberOfSeasons,
-			&numberOfEpisodes,
-			&overview,
-			&adult,
-			&inProduction,
-			&originalName,
-			&popularity,
-			&tagline,
-			&runtimeMinutes,
-			&typeID,
-			&statusID,
-			&voteCount,
-			&voteAverage,
-			&startYear,
-			&endYear,
+			&title.StartYear,
+			&title.VoteAverage,
+			&title.VoteCount,
+			&title.GenreName,
 		)
 		if err != nil {
 			fmt.Printf("❌ Scan Error: %v\n", err)
 			return nil, 0, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		// Map nullable fields to title struct (convert int32 to int)
-		if numberOfSeasons.Valid {
-			val := int(numberOfSeasons.Int32)
-			title.NumberSeasons = &val
-		}
-		if numberOfEpisodes.Valid {
-			val := int(numberOfEpisodes.Int32)
-			title.NumberEpisodes = &val
-		}
-		if overview.Valid {
-			title.Overview = &overview.String
-		}
-		if adult.Valid {
-			title.Adult = &adult.Bool
-		}
-		if inProduction.Valid {
-			title.InProduction = &inProduction.Bool
-		}
-		if originalName.Valid {
-			title.OriginalName = &originalName.String
-		}
-		if popularity.Valid {
-			val := int(popularity.Int32)
-			title.Popularity = &val
-		}
-		if tagline.Valid {
-			title.Tagline = &tagline.String
-		}
-		if runtimeMinutes.Valid {
-			val := int(runtimeMinutes.Int32)
-			title.RuntimeMinutes = &val
-		}
-		if typeID.Valid {
-			title.TypeID = &typeID.String
-		}
-		if statusID.Valid {
-			title.StatusID = &statusID.String
-		}
-		if voteCount.Valid {
-			val := int(voteCount.Int32)
-			title.VoteCount = &val
-		}
-		if voteAverage.Valid {
-			title.VoteAverage = &voteAverage.Float64
-		}
-		if startYear.Valid {
-			val := int(startYear.Int32)
-			title.StartYear = &val
-		}
-		if endYear.Valid {
-			val := int(endYear.Int32)
-			title.EndYear = &val
-		}
-
 		// Append ke slice
 		titles = append(titles, &title)
-		ratingStr := "N/A"
-		if title.VoteAverage != nil {
-			ratingStr = fmt.Sprintf("%.1f", *title.VoteAverage)
-		}
-		yearStr := "N/A"
-		if title.StartYear != nil {
-			yearStr = fmt.Sprintf("%d", *title.StartYear)
-		}
-		fmt.Printf("✅ Found: %s (Rating: %s, Year: %s)\n", title.Name, ratingStr, yearStr)
+		ratingStr := fmt.Sprintf("%.1f", title.VoteAverage)
+		fmt.Printf("✅ Found: %s (Rating: %s, Year: %d, Genre: %s)\n", title.Name, ratingStr, title.StartYear, title.GenreName)
 	}
 
 	// Check error dari rows iteration

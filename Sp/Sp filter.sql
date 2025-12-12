@@ -1,4 +1,5 @@
 ﻿USE INTEGRASI_DB
+
 -- Filter Type
 CREATE INDEX IX_titles_type ON titles(type_id);
 
@@ -19,7 +20,7 @@ CREATE INDEX IX_genres_title_genre ON genres(title_id, genre_type_id);
 CREATE INDEX IX_production_countries_origin ON production_countries(origin_country_type_id, title_id);
 CREATE INDEX IX_production_countries_prod ON production_countries(production_country_type_id, title_id);
 -------- sp filter --------------------------
-ALTER PROCEDURE sp_filter_titles
+CREATE PROCEDURE sp_filter_titles
     @GenreId NVARCHAR(40) = NULL,
     @TypeId NVARCHAR(40) = NULL,
     @StatusId NVARCHAR(40) = NULL,

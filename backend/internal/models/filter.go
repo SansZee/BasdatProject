@@ -40,7 +40,7 @@ type FilteredTitle struct {
 // FilterResponse merepresentasikan response structure untuk filter results
 type FilterResponse struct {
 	Success bool             `json:"success"` // true/false
-	Data    []*FilteredTitle `json:"data"`    // array of filtered titles
+	Data    []*FilmCardData  `json:"data"`    // array of filtered titles (using consistent FilmCardData)
 	Count   int              `json:"count"`   // total count from database
 }
 

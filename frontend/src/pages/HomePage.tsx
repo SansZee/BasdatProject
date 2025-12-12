@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Navigation } from '../components/shared/Navigation';
+import { FilmCard } from '../components/shared/FilmCard';
 import { Search, TrendingUp, Star, Film, Home, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { titlesAPI, Title, SearchTitle } from '../api/titles';
@@ -376,36 +377,24 @@ export function HomePage() {
               </div>
             ) : searchResults.length > 0 ? (
               <>
-              <h3 className="text-light text-3xl font-bold mb-8">Search Results for "{searchQuery}"</h3>
-               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                 {searchResults.map((title, index) => (
-                   <div
+               <h3 className="text-light text-3xl font-bold mb-8">Search Results for "{searchQuery}"</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                  {searchResults.map((title, index) => (
+                    <FilmCard
                       key={`search-${title.title_id}-${index}`}
-                      onClick={() => navigate(`/titles/${title.title_id}`, { 
+                      titleId={title.title_id || ''}
+                      name={title.name || ''}
+                      year={title.start_year}
+                      genre={title.genre_name}
+                      rating={title.vote_average}
+                      onNavigate={(id) => navigate(`/titles/${id}`, { 
                         state: { from: 'search', query: searchQuery }
                       })}
-                      className="card hover:border-accent transition-colors cursor-pointer group"
-                    >
-                     <div className="aspect-[2/3] bg-primary/50 rounded-lg mb-3 flex items-center justify-center group-hover:bg-primary/70 transition-colors">
-                       <Film className="text-accent" size={48} />
-                     </div>
-                     <h4 className="text-light font-semibold mb-2 line-clamp-2 text-sm h-10">
-                       {title.name || 'Unknown Title'}
-                     </h4>
-                     <p className="text-gray-400 text-xs mb-3 line-clamp-3">
-                       {title.overview || 'No description available'}
-                     </p>
-                     <div className="flex items-center gap-1">
-                       <Star className="text-accent fill-accent" size={16} />
-                       <span className="text-accent font-semibold text-sm">
-                         {title.vote_average ? title.vote_average.toFixed(1) : 'N/A'}
-                       </span>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-               </>
-             ) : (
+                    />
+                  ))}
+                </div>
+                </>
+              ) : (
                <div className="bg-secondary/50 rounded-lg p-12 text-center border border-yellow-300">
                  <Film className="text-gray-500 mx-auto mb-4" size={64} />
                  <p className="text-white-500 text-lg font-bold mb-2">No Movie/TV Shows Found</p>
@@ -458,27 +447,14 @@ export function HomePage() {
           ) : trendingTitles.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {trendingTitles.map((title) => (
-                <div
+                <FilmCard
                   key={title.title_id}
-                  onClick={() => navigate(`/titles/${title.title_id}`)}
-                  className="card hover:border-accent transition-colors cursor-pointer group"
-                >
-                  <div className="aspect-[2/3] bg-secondary/50 rounded-lg mb-3 flex items-center justify-center group-hover:bg-secondary transition-colors">
-                    <Film className="text-accent" size={48} />
-                  </div>
-                  <h4 className="text-light font-semibold mb-1 line-clamp-2 text-sm h-10">
-                    {title.name}
-                  </h4>
-                  <p className="text-gray-400 text-xs mb-2">
-                    {title.start_year} • {title.genre_name}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <Star className="text-accent fill-accent" size={16} />
-                    <span className="text-accent font-semibold text-sm">
-                      {title.vote_average.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
+                  titleId={title.title_id}
+                  name={title.name}
+                  year={title.start_year}
+                  genre={title.genre_name}
+                  rating={title.vote_average}
+                />
               ))}
             </div>
           ) : (
@@ -506,27 +482,14 @@ export function HomePage() {
           ) : topRatedTitles.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {topRatedTitles.map((title) => (
-                <div
+                <FilmCard
                   key={title.title_id}
-                  onClick={() => navigate(`/titles/${title.title_id}`)}
-                  className="card hover:border-accent transition-colors cursor-pointer group"
-                >
-                  <div className="aspect-[2/3] bg-primary/50 rounded-lg mb-3 flex items-center justify-center group-hover:bg-primary/70 transition-colors">
-                    <Film className="text-accent" size={48} />
-                  </div>
-                  <h4 className="text-light font-semibold mb-1 line-clamp-2 text-sm h-10">
-                    {title.name}
-                  </h4>
-                  <p className="text-gray-400 text-xs mb-2">
-                    {title.start_year} • {title.genre_name}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <Star className="text-accent fill-accent" size={16} />
-                    <span className="text-accent font-semibold text-sm">
-                      {title.vote_average.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
+                  titleId={title.title_id}
+                  name={title.name}
+                  year={title.start_year}
+                  genre={title.genre_name}
+                  rating={title.vote_average}
+                />
               ))}
             </div>
           ) : (

@@ -1,4 +1,27 @@
 USE INTEGRASI_DB
+
+-- ============================================================================
+-- FUNCTION: fnGetFilmCardDetail - Return consistent filmcard data for any title
+-- ============================================================================
+CREATE OR ALTER FUNCTION dbo.fnGetFilmCardDetail(@titleId NVARCHAR(40))
+RETURNS TABLE
+AS
+RETURN (
+    SELECT 
+        t.title_id,
+        t.name,
+        t.startYear,
+        t.vote_average,
+        t.vote_count,
+        COALESCE((SELECT TOP 1 gt.genre_name 
+                  FROM genres g 
+                  JOIN genre_types gt ON g.genre_type_id = gt.genre_type_id 
+                  WHERE g.title_id = t.title_id), 'Unknown') AS genre_name
+    FROM titles t
+    WHERE t.title_id = @titleId
+);
+GO
+
 -- Indexing: ----------------------------------------
 -- search
 CREATE FULLTEXT CATALOG FTCatalog_Titles
@@ -18,7 +41,7 @@ ALTER DATABASE INTEGRASI_DB SET RECOVERY SIMPLE;
 GO
 SELECT name, physical_name 
 FROM sys.database_files;
-DBCC SHRINKFILE (INTEGRASI_DB_log, 50); -- 50 MB atau ukuran lain
+DBCC SHRINKFILE (INTEGRASI_DB_log, 100); -- 50 MB atau ukuran lain
 GO
 ALTER DATABASE INTEGRASI_DB 
 MODIFY FILE (
@@ -39,7 +62,7 @@ CREATE INDEX idx_titleprincipals_title ON title_principals(title_id, ordering);
 
 --- Procedure ---------------------------------------
 -- Search
-ALTER PROCEDURE sp_SearchTitles
+CREATE PROCEDURE sp_SearchTitles
     @keyword NVARCHAR(100)
 AS
 BEGIN
@@ -52,13 +75,20 @@ BEGIN
 
     SET @sql = '
         SELECT TOP 15
-            title_id,
-            name,
-            overview,
-            vote_average
-        FROM titles
-        WHERE CONTAINS((name, original_name), ' + QUOTENAME(@search, '''') + ')
-        ORDER BY vote_count DESC;
+            f.title_id,
+            f.name,
+            f.startYear,
+            f.vote_average,
+            f.vote_count,
+            f.genre_name
+        FROM (
+            SELECT TOP 15 t.title_id
+            FROM titles t
+            JOIN dbo.FilterTitles() ft ON ft.title_id = t.title_id
+            WHERE CONTAINS((t.name, t.original_name), ' + QUOTENAME(@search, '''') + ')
+            ORDER BY t.vote_count DESC
+        ) AS results
+        CROSS APPLY dbo.fnGetFilmCardDetail(results.title_id) f
     ';
 
     EXEC(@sql);
@@ -70,6 +100,7 @@ EXEC sp_SearchTitles 'breaking bad';
 SELECT FULLTEXTCATALOGPROPERTY('FTCatalog_Titles', 'PopulateStatus') AS status;
 use INTEGRASI_DB
 -- Detail
+
 CREATE OR ALTER PROCEDURE sp_GetTitleDetail
     @title_id NVARCHAR(40)
 AS
@@ -181,7 +212,9 @@ BEGIN
 END
 GO
 select * from titles where name= 'Breaking Bad'
+
 EXEC sp_GetTitleDetail @title_id = 'tt1234567';
+
 SELECT 
     t.*,
     ty.type_name,

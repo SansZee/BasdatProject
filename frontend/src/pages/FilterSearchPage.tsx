@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from '../components/shared/Navigation';
-import { FilterResultCard } from '../components/FilterResultCard';
+import { FilmCard } from '../components/shared/FilmCard';
 import { Film, Home, ArrowLeft } from 'lucide-react';
-import { titlesAPI, FilterRequest, FilteredTitle, FilterOptionsResponse } from '../api/titles';
+import { titlesAPI, FilterRequest, FilmCardData, FilterOptionsResponse } from '../api/titles';
 
 const SORT_OPTIONS = [
     { id: 'released', label: 'Release Date' },
@@ -16,7 +16,7 @@ export function FilterSearchPage() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingOptions, setIsLoadingOptions] = useState(true);
-    const [results, setResults] = useState<FilteredTitle[]>([]);
+    const [results, setResults] = useState<FilmCardData[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const [error, setError] = useState<string | null>(null);
@@ -327,9 +327,13 @@ export function FilterSearchPage() {
                                     {/* Results Grid */}
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
                                         {results.map((title) => (
-                                            <FilterResultCard
+                                            <FilmCard
                                                 key={title.title_id}
-                                                title={title}
+                                                titleId={title.title_id}
+                                                name={title.name}
+                                                year={title.start_year}
+                                                genre={title.genre_name}
+                                                rating={title.vote_average}
                                             />
                                         ))}
                                     </div>

@@ -4,9 +4,9 @@ import (
 	"time"
 )
 
-// TrendingTitle merepresentasikan data trending film dari database
-// Match dengan output sp_getTrendings
-type TrendingTitle struct {
+// FilmCardData merepresentasikan consistent filmcard data dari semua SP
+// Digunakan oleh: sp_getTrendings, sp_getTopRated, sp_SearchTitles
+type FilmCardData struct {
 	TitleID     string  `json:"title_id"`
 	Name        string  `json:"name"`
 	StartYear   int     `json:"start_year"`
@@ -15,13 +15,11 @@ type TrendingTitle struct {
 	GenreName   string  `json:"genre_name"`
 }
 
-// SearchTitle merepresentasikan hasil search dari sp_SearchTitles
-type SearchTitle struct {
-	TitleID     *string  `json:"title_id"`     // Nullable
-	Name        *string  `json:"name"`         // Nullable
-	Overview    *string  `json:"overview"`     // Nullable
-	VoteAverage *float64 `json:"vote_average"` // Nullable
-}
+// TrendingTitle - alias untuk backwards compatibility
+type TrendingTitle = FilmCardData
+
+// SearchTitle - alias untuk backwards compatibility
+type SearchTitle = FilmCardData
 
 // Actor merepresentasikan data actor dari database
 type Actor struct {

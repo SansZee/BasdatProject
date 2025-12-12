@@ -9,16 +9,19 @@ export interface Title {
   genre_name: string;
 }
 
-export interface SearchTitle {
-  title_id: string | null;
-  name: string | null;
-  overview: string | null;
-  vote_average: number | null;
+export interface FilmCardData {
+  title_id: string;
+  name: string;
+  start_year: number;
+  vote_average: number;
+  vote_count: number;
+  genre_name: string;
 }
 
-// Alias untuk backwards compatibility
-export type TrendingTitle = Title;
-export type TopRatedTitle = Title;
+// Aliases untuk backwards compatibility
+export type SearchTitle = FilmCardData;
+export type TrendingTitle = FilmCardData;
+export type TopRatedTitle = FilmCardData;
 
 export interface TitleDetail {
   title_id: string | null;
@@ -93,7 +96,7 @@ export interface TitleDetailResponse {
 
  export interface FilterResponse {
    success: boolean;
-   data: FilteredTitle[];
+   data: FilmCardData[];
    count: number;
  }
 
