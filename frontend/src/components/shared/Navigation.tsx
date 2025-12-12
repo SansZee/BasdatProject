@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, User, Search } from 'lucide-react';
+import { User, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logo from './LOGO.png';
 
@@ -53,13 +53,22 @@ export function Navigation() {
                   </div>
                 </div>
 
+                {/* Dashboard Button (conditional based on role) */}
+                {user && (user.role_name?.toLowerCase() === 'executive' || user.role_name?.toLowerCase() === 'production') && (
+                  <button
+                    onClick={() => navigate(`/${user.role_name.toLowerCase()}/dashboard`)}
+                    className="px-4 py-2 bg-accent/10 text-accent rounded-lg border-2 border-accent hover:bg-accent hover:text-primary transition-colors font-semibold text-sm"
+                  >
+                    Dashboard
+                  </button>
+                )}
+
                 {/* Logout Button */}
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-lg border-2 border-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                  className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg border-2 border-red-500 hover:bg-red-500 hover:text-white transition-colors font-semibold text-sm"
                 >
-                  <LogOut size={20} />
-                  <span className="font-semibold">Logout</span>
+                  Logout
                 </button>
               </>
             ) : (

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI, LoginRequest } from '../api/auth';
-import { Film } from 'lucide-react';
+import logo from '../components/shared/LOGO.png';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -65,22 +65,26 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-accent p-3 rounded-lg">
-              <Film className="text-primary" size={40} />
-            </div>
-          </div>
-          <h1 className="text-4xl font-bold text-accent mb-2">Film Dashboard</h1>
-          <p className="text-gray-400">Sign in to your account</p>
+    <div className="h-screen bg-primary flex items-center justify-center px-4 overflow-hidden">
+      {/* Home Button */}
+      <Link
+        to="/"
+        className="absolute top-4 left-4 px-3 py-1 text-sm text-accent hover:text-accent/80 border border-accent/30 rounded hover:border-accent transition-colors"
+      >
+        ← Home
+      </Link>
+
+      <div className="w-full max-w-md max-h-screen overflow-y-auto">
+        {/* Logo */}
+        <div className="text-center mb-4">
+          <img src={logo} alt="FilmKing" className="h-10 w-auto mx-auto mb-2" />
+          <h1 className="text-2xl font-bold text-accent">Sign In</h1>
+          <p className="text-gray-400 text-xs">Access your account</p>
         </div>
 
         {/* Login Form */}
         <div className="card">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Error Message */}
             {error && (
               <div className="bg-red-500/10 border-2 border-red-500 text-red-500 px-4 py-3 rounded-lg">
@@ -90,13 +94,13 @@ export function LoginPage() {
 
             {/* Username */}
             <div>
-              <label className="block text-light mb-2 font-semibold">
+              <label className="block text-light mb-1 font-semibold text-sm">
                 Username
               </label>
               <input
                 type="text"
-                className="input-field"
-                placeholder="Enter your username"
+                className="input-field py-2"
+                placeholder="Enter username"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
@@ -106,13 +110,13 @@ export function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-light mb-2 font-semibold">
+              <label className="block text-light mb-1 font-semibold text-sm">
                 Password
               </label>
               <input
                 type="password"
-                className="input-field"
-                placeholder="Enter your password"
+                className="input-field py-2"
+                placeholder="Enter password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -123,15 +127,15 @@ export function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              className="btn-primary w-full"
+              className="btn-primary w-full py-2 text-sm"
               disabled={loading}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
 
             {/* Register Link */}
-            <p className="text-center text-gray-400">
-              Don't have an account?{' '}
+            <p className="text-center text-gray-400 text-xs">
+              No account?{' '}
               <Link to="/register" className="text-accent hover:underline">
                 Sign up
               </Link>
@@ -140,21 +144,13 @@ export function LoginPage() {
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-6 card border-accent/50">
-          <p className="text-sm text-gray-400 mb-3 font-semibold">Demo Accounts:</p>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Native User:</span>
-              <span className="text-accent">native_demo / Demo123!</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Executive:</span>
-              <span className="text-accent">exec_demo / Demo123!</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Production:</span>
-              <span className="text-accent">prod_demo / Demo123!</span>
-            </div>
+        <div className="mt-2 p-2 bg-secondary/50 rounded-lg border border-accent/20">
+          <p className="text-xs text-gray-400 font-semibold uppercase">Demo</p>
+          <div className="space-y-0.5 text-xs mt-1">
+            <div><span className="text-gray-400">Native:</span> <span className="text-accent">native_demo</span></div>
+            <div><span className="text-gray-400">Exec:</span> <span className="text-accent">exec_demo</span></div>
+            <div><span className="text-gray-400">Prod:</span> <span className="text-accent">prod_demo</span></div>
+            <div className="text-gray-400">Pass: Demo123!</div>
           </div>
         </div>
       </div>

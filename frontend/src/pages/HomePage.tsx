@@ -283,10 +283,10 @@ export function HomePage() {
                     }
                   }}
                   placeholder="Search for movie/TV shows"
-                  className="input-field pr-14"
+                   className="input-field pr-12"
                 />
-              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent text-primary p-3 rounded hover:bg-accent/90 transition-colors disabled:opacity-50" disabled={isSearching}>
-                <Search size={24} />
+              <button type="submit" className="absolute right-0 top-0 bottom-0 px-4 bg-accent text-primary rounded-r hover:bg-accent/90 transition-colors disabled:opacity-50 flex items-center justify-center" disabled={isSearching}>
+                <Search size={20} />
               </button>
 
               {/* STEP 6: RENDER DROPDOWN dengan 5 suggestions menggunakan Portal */}

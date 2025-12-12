@@ -1,18 +1,24 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LoadingProvider } from './context/LoadingContext';
+import { PageLoader } from './components/shared/PageLoader';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { TitleDetailPageNew } from './pages/TitleDetailPageNew';
 import { TitleDetailDebug } from './pages/TitleDetailDebug';
 import { FilterSearchPage } from './pages/FilterSearchPage';
+import { ExecutiveDashboard } from './pages/ExecutiveDashboard';
+import { ProductionDashboard } from './pages/ProductionDashboard';
 import { ProtectedRoute } from './components/shared/ProtectedRoute';
 
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+      <LoadingProvider>
+        <AuthProvider>
+          <PageLoader />
+          <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -39,9 +45,10 @@ function App() {
             } 
           />
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
-  );
-}
+        </AuthProvider>
+        </LoadingProvider>
+        </BrowserRouter>
+        );
+        }
 
 export default App;
