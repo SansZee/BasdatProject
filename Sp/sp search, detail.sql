@@ -62,7 +62,7 @@ CREATE INDEX idx_titleprincipals_title ON title_principals(title_id, ordering);
 
 --- Procedure ---------------------------------------
 -- Search
-CREATE PROCEDURE sp_SearchTitles
+CREATE OR ALTER PROCEDURE sp_SearchTitles
     @keyword NVARCHAR(100)
 AS
 BEGIN

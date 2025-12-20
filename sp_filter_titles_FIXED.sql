@@ -1,3 +1,4 @@
+USE INTEGRASI_DB;
 CREATE OR ALTER PROCEDURE sp_filter_titles
     @GenreId NVARCHAR(40) = NULL,
     @TypeId NVARCHAR(40) = NULL,

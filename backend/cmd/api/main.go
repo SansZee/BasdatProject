@@ -38,15 +38,18 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	titleRepo := repository.NewTitleRepository(db)
 	reviewRepo := repository.NewReviewRepository(db)
+	executiveRepo := repository.NewExecutiveRepository(db)
 
 	// 4. Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
 	reviewService := service.NewReviewService(reviewRepo)
+	executiveService := service.NewExecutiveService(executiveRepo)
 
 	// 5. Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
 	titleHandler := handler.NewTitleHandler(titleRepo)
 	reviewHandler := handler.NewReviewHandler(reviewService)
+	executiveHandler := handler.NewExecutiveHandler(executiveService)
 
 	// 6. Setup router
 	router := mux.NewRouter()
@@ -73,6 +76,9 @@ func main() {
 	
 	// Reviews public routes
 	router.HandleFunc("/api/reviews/{title}", reviewHandler.GetReviewsByTitle).Methods("GET", "OPTIONS")
+	
+	// Executive dashboard routes
+	router.HandleFunc("/api/dashboard/kpi", executiveHandler.GetKPIMetrics).Methods("GET", "OPTIONS")
 
 	// 10. Protected routes (butuh JWT token)
 	// Wrap handler dengan Auth middleware - HANYA untuk /api/auth/* paths
