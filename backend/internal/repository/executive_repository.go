@@ -31,7 +31,7 @@ func (r *ExecutiveRepository) GetKPIMetrics(ctx context.Context, companyID strin
 			TopTypes: []models.TypeBreakdown{},
 		},
 		AverageRating: &models.AverageRating{},
-		TopGenre:      &models.TopGenre{},
+		BestTitle:     &models.BestTitle{},
 	}
 
 	// Result Set 1: Total and Average Rating
@@ -55,14 +55,14 @@ func (r *ExecutiveRepository) GetKPIMetrics(ctx context.Context, companyID strin
 		kpi.TotalProduced.TopTypes = append(kpi.TotalProduced.TopTypes, typeBreakdown)
 	}
 
-	// Result Set 3: Top Genre
+	// Result Set 3: Best Title
 	if !rows.NextResultSet() {
 		return nil, fmt.Errorf("failed to move to third result set")
 	}
 	for rows.Next() {
-		err := rows.Scan(&kpi.TopGenre.GenreName, &kpi.TopGenre.TotalTitle, &kpi.TopGenre.AverageRating)
+		err := rows.Scan(&kpi.BestTitle.Name, &kpi.BestTitle.VoteAverage, &kpi.BestTitle.VoteCount)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan top genre: %w", err)
+			return nil, fmt.Errorf("failed to scan best title: %w", err)
 		}
 	}
 

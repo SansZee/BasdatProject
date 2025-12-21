@@ -24,14 +24,11 @@ BEGIN
 	GROUP BY t.type_id, ty.type_name
 	ORDER BY COUNT(*) DESC;
 	
-	-- Result Set 3: Top Genre
-	SELECT TOP 1 gt.genre_name, COUNT(DISTINCT t.title_id) as total_title, AVG(t.vote_average) as average_rating
+	-- Result Set 3: Best Title
+	SELECT TOP 1 t.name, t.vote_average, t.vote_count
 	FROM production_companies pc
 	JOIN titles t ON pc.title_id = t.title_id
-	JOIN genres g ON t.title_id = g.title_id
-	JOIN genre_types gt ON g.genre_type_id = gt.genre_type_id
 	WHERE pc.production_company_type_id = @company_id
-	GROUP BY gt.genre_type_id, gt.genre_name
-	ORDER BY COUNT(DISTINCT t.title_id) DESC;
+	ORDER BY (t.vote_average * LOG(t.vote_count + 1)) DESC;
 END
 GO
