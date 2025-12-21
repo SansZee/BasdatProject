@@ -10,9 +10,10 @@ type FilterRequest struct {
 	OriginCountryIDs      []string `json:"originCountryIds"`      // Optional: multiple origin country IDs
 	ProductionCountryIDs  []string `json:"productionCountryIds"`  // Optional: multiple production country IDs
 	Year                  *int     `json:"year"`                  // Optional: release year
-	SortBy                string   `json:"sortBy"`                // Default: "released" (rating, popularity, etc)
+	SortBy                string   `json:"sortBy"`                // Default: "release_date" (release_date, most_viewed, name, imdb_rating)
+	SortOrder             string   `json:"sortOrder"`             // Default: "DESC" (ASC or DESC)
 	Page                  int      `json:"page"`                  // Pagination: page number (default 1)
-	Limit                 int      `json:"limit"`                 // Pagination: items per page (default 20)
+	Limit                 int      `json:"limit"`                 // Pagination: items per page (default 25, max 200 films)
 }
 
 // FilteredTitle merepresentasikan hasil filter titles (dari sp_filter_titles)

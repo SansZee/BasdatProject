@@ -7,12 +7,13 @@ import (
 // FilmCardData merepresentasikan consistent filmcard data dari semua SP
 // Digunakan oleh: sp_getTrendings, sp_getTopRated, sp_SearchTitles
 type FilmCardData struct {
-	TitleID     string  `json:"title_id"`
-	Name        string  `json:"name"`
-	StartYear   int     `json:"start_year"`
-	VoteAverage float64 `json:"vote_average"`
-	VoteCount   int     `json:"vote_count"`
-	GenreName   string  `json:"genre_name"`
+	TitleID     string   `json:"title_id"`
+	Name        *string  `json:"name"`
+	StartYear   *int     `json:"start_year"`
+	EndYear     *int     `json:"end_year"`
+	VoteAverage *float64 `json:"vote_average"`
+	VoteCount   *int     `json:"vote_count"`
+	GenreName   string   `json:"genre_name"`
 }
 
 // TrendingTitle - alias untuk backwards compatibility

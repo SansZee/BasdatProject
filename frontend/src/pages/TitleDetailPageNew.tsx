@@ -71,23 +71,18 @@ export function TitleDetailPageNew() {
     const titleDetail = detail.detail;
 
     // Prepare tabs content
-    const tabs: TabItem[] = [
-      {
-        id: 'info',
-        label: 'Info',
-        content: <InfoTabContent detail={detail} />,
-      },
-      {
-        id: 'cast',
-        label: 'Cast & Crew',
-        content: <CastTabContent detail={detail} />,
-      },
-      {
-        id: 'reviews',
-        label: 'Reviews',
-        content: <ReviewsTabContent titleId={id!} />,
-      },
-    ];
+     const tabs: TabItem[] = [
+       {
+         id: 'info',
+         label: 'Info',
+         content: <InfoTabContent detail={detail} />,
+       },
+       {
+         id: 'cast',
+         label: 'Cast & Crew',
+         content: <CastTabContent detail={detail} />,
+       },
+     ];
 
     return (
         <div className="min-h-screen bg-primary">
@@ -254,6 +249,11 @@ export function TitleDetailPageNew() {
             <div className="max-w-[1400px] mx-auto px-6 py-12">
                 <Tabs tabs={tabs} defaultTab="info" />
             </div>
+
+            {/* Reviews Section - Below Tabs */}
+            <div className="max-w-[1400px] mx-auto px-6 py-12 border-t border-gray-600">
+                <ReviewSection titleId={id!} />
+            </div>
         </div>
     );
 }
@@ -393,8 +393,6 @@ function CastTabContent({ detail }: { detail: TitleDetailResponse }) {
     );
 }
 
-function ReviewsTabContent({ titleId }: { titleId: string }) {
-    return <ReviewSection titleId={titleId} />;
-}
+
 
 

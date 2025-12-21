@@ -6,10 +6,10 @@ import { Film, Home, ArrowLeft } from 'lucide-react';
 import { titlesAPI, FilterRequest, FilmCardData, FilterOptionsResponse } from '../api/titles';
 
 const SORT_OPTIONS = [
-    { id: 'released', label: 'Release Date' },
-    { id: 'popularity', label: 'Most Viewed' },
+    { id: 'release_date', label: 'Release Date' },
+    { id: 'most_viewed', label: 'Most Viewed' },
     { id: 'name', label: 'Name' },
-    { id: 'rating', label: 'IMDb Rating' },
+    { id: 'imdb_rating', label: 'Rating' },
 ];
 
 export function FilterSearchPage() {
@@ -27,16 +27,16 @@ export function FilterSearchPage() {
 
     // Filter states - multi-select arrays
      const [filters, setFilters] = useState({
-         genreIds: [] as string[],
-         typeIds: [] as string[],
-         statusIds: [] as string[],
-         yearIds: [] as string[],
-         sortBy: 'released',
+          genreIds: [] as string[],
+          typeIds: [] as string[],
+          statusIds: [] as string[],
+          yearIds: [] as string[],
+          sortBy: 'release_date',
      });
 
 
 
-    const itemsPerPage = 25; // 5 columns × 5 rows
+    const itemsPerPage = 25; // 5 columns × 5 rows (max 200 films, 8 pages total)
     const totalPages = Math.ceil(totalCount / itemsPerPage);
 
     // Fetch filter options on mount
@@ -83,17 +83,17 @@ export function FilterSearchPage() {
         setHasSearched(true);
 
         try {
-            const filterRequest: FilterRequest = {
-                genreIds: filters.genreIds.length > 0 ? filters.genreIds : undefined,
-                typeIds: filters.typeIds.length > 0 ? filters.typeIds : undefined,
-                statusIds: filters.statusIds.length > 0 ? filters.statusIds : undefined,
-                originCountryIds: undefined,
-                productionCountryIds: undefined,
-                year: filters.yearIds.length > 0 ? Number(filters.yearIds[0]) : undefined,
-                sortBy: filters.sortBy || 'released',
-                page,
-                limit: itemsPerPage,
-            };
+             const filterRequest: FilterRequest = {
+                 genreIds: filters.genreIds.length > 0 ? filters.genreIds : undefined,
+                 typeIds: filters.typeIds.length > 0 ? filters.typeIds : undefined,
+                 statusIds: filters.statusIds.length > 0 ? filters.statusIds : undefined,
+                 originCountryIds: undefined,
+                 productionCountryIds: undefined,
+                 year: filters.yearIds.length > 0 ? Number(filters.yearIds[0]) : undefined,
+                 sortBy: filters.sortBy || 'release_date',
+                 page,
+                 limit: itemsPerPage,
+             };
 
             const response = await titlesAPI.filterTitles(filterRequest);
 
@@ -317,12 +317,12 @@ export function FilterSearchPage() {
 
                             {!isLoading && hasSearched && results.length > 0 ? (
                                 <>
-                                    <div className="mb-6">
-                                        <p className="text-gray-400">
-                                            Showing <span className="text-accent font-semibold">{results.length}</span> of{' '}
-                                            <span className="text-accent font-semibold">{totalCount}</span> results
-                                        </p>
-                                    </div>
+                                     <div className="mb-6">
+                                         <p className="text-gray-400">
+                                             Showing <span className="text-accent font-semibold">{results.length}</span> of{' '}
+                                             <span className="text-accent font-semibold">{totalCount}</span> results
+                                         </p>
+                                     </div>
 
                                     {/* Results Grid */}
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
@@ -338,81 +338,48 @@ export function FilterSearchPage() {
                                         ))}
                                     </div>
 
-                                    {/* Advanced Pagination */}
-                                    {totalPages > 1 && (
-                                        <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
-                                            <button
-                                                onClick={() => handleSearch(Math.max(1, currentPage - 1))}
-                                                disabled={currentPage === 1 || isLoading}
-                                                className="px-4 py-2 bg-secondary text-light rounded hover:bg-secondary/80 disabled:opacity-50"
-                                            >
-                                                ← Prev
-                                            </button>
+                                    {/* Advanced Pagination - Max 8 pages */}
+                                     {totalPages > 1 && (
+                                         <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
+                                             <button
+                                                 onClick={() => handleSearch(Math.max(1, currentPage - 1))}
+                                                 disabled={currentPage === 1 || isLoading}
+                                                 className="px-4 py-2 bg-secondary text-light rounded hover:bg-secondary/80 disabled:opacity-50"
+                                             >
+                                                 ← Prev
+                                             </button>
 
-                                            <div className="flex gap-1 flex-wrap justify-center">
-                                                {/* First page */}
-                                                {currentPage > 3 && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => handleSearch(1)}
-                                                            disabled={isLoading}
-                                                            className="w-10 h-10 rounded bg-secondary text-light hover:bg-secondary/80"
-                                                        >
-                                                            1
-                                                        </button>
-                                                        {currentPage > 4 && <span className="px-2 text-gray-400">...</span>}
-                                                    </>
-                                                )}
+                                             <div className="flex gap-1 flex-wrap justify-center">
+                                                 {/* Show all pages (max 8) */}
+                                                 {Array.from({ length: Math.min(8, totalPages) }, (_, i) => i + 1).map(page => (
+                                                     <button
+                                                         key={page}
+                                                         onClick={() => handleSearch(page)}
+                                                         disabled={isLoading}
+                                                         className={`w-10 h-10 rounded transition-colors ${currentPage === page
+                                                             ? 'bg-accent text-primary font-bold'
+                                                             : 'bg-secondary text-light hover:bg-secondary/80'
+                                                             }`}
+                                                     >
+                                                         {page}
+                                                     </button>
+                                                 ))}
+                                             </div>
 
-                                                {/* Page range around current page */}
-                                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                                                    return pageNum <= totalPages ? pageNum : null;
-                                                })
-                                                    .filter(Boolean)
-                                                    .map(page => (
-                                                        <button
-                                                            key={page}
-                                                            onClick={() => handleSearch(page)}
-                                                            disabled={isLoading}
-                                                            className={`w-10 h-10 rounded transition-colors ${currentPage === page
-                                                                ? 'bg-accent text-primary font-bold'
-                                                                : 'bg-secondary text-light hover:bg-secondary/80'
-                                                                }`}
-                                                        >
-                                                            {page}
-                                                        </button>
-                                                    ))}
+                                             <button
+                                                 onClick={() => handleSearch(Math.min(totalPages, currentPage + 1))}
+                                                 disabled={currentPage === totalPages || isLoading}
+                                                 className="px-4 py-2 bg-secondary text-light rounded hover:bg-secondary/80 disabled:opacity-50"
+                                             >
+                                                 Next →
+                                             </button>
 
-                                                {/* Last page */}
-                                                {currentPage < totalPages - 2 && (
-                                                    <>
-                                                        {currentPage < totalPages - 3 && <span className="px-2 text-gray-400">...</span>}
-                                                        <button
-                                                            onClick={() => handleSearch(totalPages)}
-                                                            disabled={isLoading}
-                                                            className="w-10 h-10 rounded bg-secondary text-light hover:bg-secondary/80"
-                                                        >
-                                                            {totalPages}
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-
-                                            <button
-                                                onClick={() => handleSearch(Math.min(totalPages, currentPage + 1))}
-                                                disabled={currentPage === totalPages || isLoading}
-                                                className="px-4 py-2 bg-secondary text-light rounded hover:bg-secondary/80 disabled:opacity-50"
-                                            >
-                                                Next →
-                                            </button>
-
-                                            {/* Page info */}
-                                            <span className="text-gray-400 text-sm ml-4">
-                                                Page {currentPage} of {totalPages}
-                                            </span>
-                                        </div>
-                                    )}
+                                             {/* Page info */}
+                                             <span className="text-gray-400 text-sm ml-4">
+                                                 Page {currentPage} of {Math.min(8, totalPages)}
+                                             </span>
+                                         </div>
+                                     )}
                                 </>
                             ) : !isLoading && hasSearched ? (
                                 <div className="bg-secondary border border-accent/30 rounded-lg p-12 text-center">

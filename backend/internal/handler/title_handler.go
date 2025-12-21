@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
+	"film-dashboard-api/internal/cache"
 	"film-dashboard-api/internal/models"
 	"film-dashboard-api/internal/repository"
 	"film-dashboard-api/internal/utils"
@@ -13,13 +15,15 @@ import (
 
 // TitleHandler adalah struct yang berisi semua handler untuk title/film operations
 type TitleHandler struct {
-	titleRepo *repository.TitleRepository
+	titleRepo   *repository.TitleRepository
+	filterCache *cache.FilterCache
 }
 
 // NewTitleHandler adalah constructor untuk bikin instance TitleHandler
 func NewTitleHandler(titleRepo *repository.TitleRepository) *TitleHandler {
 	return &TitleHandler{
-		titleRepo: titleRepo,
+		titleRepo:   titleRepo,
+		filterCache: cache.NewFilterCache(30 * time.Minute), // Cache untuk 30 menit
 	}
 }
 
@@ -118,9 +122,19 @@ func (h *TitleHandler) SearchTitles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get optional limit parameter (default 20)
+	limitStr := r.URL.Query().Get("limit")
+	maxResults := 20
+	if limitStr != "" {
+		if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 && parsed <= 100 {
+			maxResults = parsed
+		}
+	}
+
 	fmt.Println("=== SEARCH REQUEST ===")
 	fmt.Printf("Endpoint: /api/titles/search\n")
 	fmt.Printf("Query Param 'q': %s\n", keyword)
+	fmt.Printf("Limit: %d\n", maxResults)
 
 	// 4. Call repository untuk search titles
 	titles, err := h.titleRepo.SearchTitles(keyword)
@@ -130,7 +144,13 @@ func (h *TitleHandler) SearchTitles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Return success response
+	// 5. Limit results untuk faster response
+	// Frontend akan further limit ke 5 untuk dropdown
+	if len(titles) > maxResults {
+		titles = titles[:maxResults]
+	}
+
+	// 6. Return success response
 	fmt.Printf("📤 Returning %d results to frontend\n", len(titles))
 	fmt.Println("====================\n")
 	utils.WriteSuccess(w, "Search results retrieved successfully", titles)
@@ -250,10 +270,10 @@ func (h *TitleHandler) FilterTitles(w http.ResponseWriter, r *http.Request) {
 		filterReq.Page = 1
 	}
 	if filterReq.Limit <= 0 || filterReq.Limit > 100 {
-		filterReq.Limit = 20 // Default limit
+		filterReq.Limit = 25 // Default limit
 	}
 	if filterReq.SortBy == "" {
-		filterReq.SortBy = "released" // Default sort
+		filterReq.SortBy = "release_date" // Default sort
 	}
 
 	// Calculate offset untuk pagination
@@ -265,7 +285,40 @@ func (h *TitleHandler) FilterTitles(w http.ResponseWriter, r *http.Request) {
 		filterReq.GenreIDs, len(filterReq.GenreIDs), filterReq.TypeIDs, len(filterReq.TypeIDs), 
 		filterReq.StatusIDs, len(filterReq.StatusIDs), filterReq.Year, filterReq.SortBy)
 
-	// 5. Call repository untuk filter titles
+	// 5. Generate cache key
+	cacheKey := h.filterCache.GenerateCacheKey(
+		filterReq.GenreIDs,
+		filterReq.TypeIDs,
+		filterReq.StatusIDs,
+		filterReq.OriginCountryIDs,
+		filterReq.ProductionCountryIDs,
+		filterReq.Year,
+		filterReq.SortBy,
+		offset,
+		filterReq.Limit,
+	)
+
+	// 6. Check cache
+	if cachedTitles, cachedTotalCount, found := h.filterCache.Get(cacheKey); found {
+		fmt.Printf("✅ Cache HIT for key: %s\n", cacheKey)
+		fmt.Printf("📤 Returning %d cached titles (Total: %d)\n", len(cachedTitles), cachedTotalCount)
+		fmt.Println("=============================\n")
+
+		response := models.FilterResponse{
+			Success: true,
+			Data:    cachedTitles,
+			Count:   cachedTotalCount,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	fmt.Printf("❌ Cache MISS for key: %s\n", cacheKey)
+
+	// 7. Call repository untuk filter titles
 	titles, totalCount, err := h.titleRepo.FilterTitles(
 		filterReq.GenreIDs,
 		filterReq.TypeIDs,
@@ -283,14 +336,17 @@ func (h *TitleHandler) FilterTitles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 6. Build response
+	// 8. Store result in cache
+	h.filterCache.Set(cacheKey, titles, totalCount)
+
+	// 9. Build response
 	response := models.FilterResponse{
 		Success: true,
 		Data:    titles,
 		Count:   totalCount,
 	}
 
-	// 7. Return success response
+	// 10. Return success response
 	fmt.Printf("📤 Returning %d filtered titles (Total: %d)\n", len(titles), totalCount)
 	fmt.Println("=============================\n")
 

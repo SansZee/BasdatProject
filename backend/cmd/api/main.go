@@ -39,6 +39,7 @@ func main() {
 	titleRepo := repository.NewTitleRepository(db)
 	reviewRepo := repository.NewReviewRepository(db)
 	executiveRepo := repository.NewExecutiveRepository(db)
+	artistRepo := repository.NewArtistRepository(db)
 
 	// 4. Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpirationHours)
@@ -50,6 +51,7 @@ func main() {
 	titleHandler := handler.NewTitleHandler(titleRepo)
 	reviewHandler := handler.NewReviewHandler(reviewService)
 	executiveHandler := handler.NewExecutiveHandler(executiveService)
+	artistHandler := handler.NewArtistHandler(artistRepo)
 
 	// 6. Setup router
 	router := mux.NewRouter()
@@ -79,6 +81,9 @@ func main() {
 	
 	// Executive dashboard routes
 	router.HandleFunc("/api/dashboard/kpi", executiveHandler.GetKPIMetrics).Methods("GET", "OPTIONS")
+	// Artist routes
+	router.HandleFunc("/api/artists/search", artistHandler.SearchArtists).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/artists/{id}/detail", artistHandler.GetArtistDetail).Methods("GET", "OPTIONS")
 
 	// 10. Protected routes (butuh JWT token)
 	// Wrap handler dengan Auth middleware - HANYA untuk /api/auth/* paths
@@ -91,7 +96,7 @@ func main() {
 	// Logout endpoint (protected)
 	protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST", "OPTIONS")
 
-	// 11. Protected reviews routes (butuh JWT token)
+	// 11. Protected reviews routes (butuh JWT token) - MUST BE BEFORE PUBLIC REVIEWS ROUTE
 	protectedReviewRouter := router.PathPrefix("/api/reviews").Subrouter()
 	protectedReviewRouter.Use(middleware.Auth(authService))
 
@@ -100,12 +105,16 @@ func main() {
 
 	// Get user's reviews
 	protectedReviewRouter.HandleFunc("/user", reviewHandler.GetUserReviews).Methods("GET", "OPTIONS")
+	fmt.Println("✅ Registered route: GET /api/reviews/user (protected)")
 
 	// Check if user reviewed a title
 	protectedReviewRouter.HandleFunc("/check/{title}", reviewHandler.GetUserReviewForTitle).Methods("GET", "OPTIONS")
 
 	// Delete review
 	protectedReviewRouter.HandleFunc("/{id}", reviewHandler.DeleteReview).Methods("DELETE", "OPTIONS")
+
+	// Reviews public routes (AFTER protected routes to avoid path param conflict)
+	router.HandleFunc("/api/reviews/{title}", reviewHandler.GetReviewsByTitle).Methods("GET", "OPTIONS")
 
 	// Health check endpoint (untuk monitoring)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

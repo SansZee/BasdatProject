@@ -6,6 +6,7 @@ export interface Review {
   user_id: number;
   username: string;
   title_id: string;
+  title_name?: string;
   rating: number;
   review_text: string;
   created_at: string;
@@ -23,6 +24,7 @@ export interface ReviewResponse {
   user_id: number;
   username: string;
   title_id: string;
+  title_name?: string;
   rating: number;
   review_text: string;
   created_at: string;
