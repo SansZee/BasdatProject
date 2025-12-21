@@ -14,14 +14,14 @@ type AverageRating struct {
 	AverageRating	float64 `json:"average_rating"`
 }
 
-type BestTitle struct {
-	Name		string	`json:"name"`
-	VoteAverage	float64	`json:"vote_average"`
-	VoteCount	int		`json:"vote_count"`
+type TopGenre struct {
+	GenreName      string  `json:"genre_name"`
+	TotalTitle     int     `json:"total_title"`
+	AverageRating  float64 `json:"average_rating"`
 }
 
 type KPIMetrics struct {
     TotalProduced  *TotalProduced `json:"total_produced"`
     AverageRating  *AverageRating `json:"average_rating"`
-    BestTitle      *BestTitle     `json:"best_title"`
+    TopGenre       *TopGenre      `json:"top_genre"`
 }
