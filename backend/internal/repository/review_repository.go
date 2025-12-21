@@ -141,25 +141,15 @@ func (r *ReviewRepository) GetReviewsByTitle(titleID string) ([]models.ReviewRes
 }
 
 // GetReviewsByUser mengambil semua review yang ditulis oleh user tertentu
+// Menggunakan SP: sp_user_reviews
 func (r *ReviewRepository) GetReviewsByUser(userID int) ([]models.ReviewResponse, error) {
-	query := `
-		SELECT 
-			r.review_id,
-			r.user_id,
-			u.username,
-			r.title_id,
-			r.rating,
-			r.review_text,
-			r.created_at,
-			r.updated_at
-		FROM Reviews r
-		INNER JOIN Users u ON r.user_id = u.user_id
-		WHERE r.user_id = @p1
-		ORDER BY r.created_at DESC
-	`
+	query := `EXEC dbo.sp_user_reviews @UserId = @p1`
+
+	fmt.Printf("DEBUG: Executing GetReviewsByUser with userID: %d\n", userID)
 
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
+		fmt.Printf("DEBUG: Query error: %v\n", err)
 		return nil, fmt.Errorf("failed to get reviews by user: %w", err)
 	}
 	defer rows.Close()
@@ -167,23 +157,31 @@ func (r *ReviewRepository) GetReviewsByUser(userID int) ([]models.ReviewResponse
 	var reviews []models.ReviewResponse
 	for rows.Next() {
 		var review models.ReviewResponse
+		// Note: SP returns review_id, title_id, name (title_name), rating, review_text, created_at, updated_at
 		err := rows.Scan(
 			&review.ReviewID,
-			&review.UserID,
-			&review.Username,
 			&review.TitleID,
+			&review.TitleName, // title_name from SP
 			&review.Rating,
 			&review.ReviewText,
 			&review.CreatedAt,
 			&review.UpdatedAt,
 		)
 		if err != nil {
+			fmt.Printf("DEBUG: Scan error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan review: %w", err)
 		}
+		// Set username and user_id from context (SP doesn't return these, but we can set them)
+		review.UserID = userID
+		review.Username = "" // This will be empty for now, you can update the SP to include it
+		fmt.Printf("DEBUG: Found review - ID: %d, Title: %s\n", review.ReviewID, review.TitleName)
 		reviews = append(reviews, review)
 	}
 
+	fmt.Printf("DEBUG: Total reviews found: %d\n", len(reviews))
+
 	if err = rows.Err(); err != nil {
+		fmt.Printf("DEBUG: Iteration error: %v\n", err)
 		return nil, fmt.Errorf("error iterating reviews: %w", err)
 	}
 

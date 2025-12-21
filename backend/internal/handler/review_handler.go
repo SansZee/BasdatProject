@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -125,12 +126,17 @@ func (h *ReviewHandler) GetUserReviews(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Printf("HANDLER: GetUserReviews called for userID: %d\n", user.UserID)
+
 	// 4. Call service untuk get user reviews
 	reviews, err := h.reviewService.GetReviewsByUser(user.UserID)
 	if err != nil {
+		fmt.Printf("HANDLER: Error from service: %v\n", err)
 		utils.WriteError(w, http.StatusInternalServerError, "Failed to fetch reviews", err)
 		return
 	}
+
+	fmt.Printf("HANDLER: Got %d reviews from service\n", len(reviews))
 
 	// 5. Return response
 	utils.WriteSuccess(w, "User reviews retrieved successfully", reviews)

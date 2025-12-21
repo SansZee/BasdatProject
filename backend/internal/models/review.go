@@ -26,6 +26,7 @@ type ReviewResponse struct {
 	UserID     int       `json:"user_id"`
 	Username   string    `json:"username"` // Added for display
 	TitleID    string    `json:"title_id"`
+	TitleName  string    `json:"title_name"` // Added for user review panel
 	Rating     int       `json:"rating"`
 	ReviewText string    `json:"review_text"`
 	CreatedAt  time.Time `json:"created_at"`

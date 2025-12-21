@@ -51,14 +51,17 @@ export function Navigation() {
                     <div className="hidden sm:flex items-center gap-4">
                         {isAuthenticated ? (
                             <>
-                                {/* User Info */}
-                                <div className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg border border-accent/30">
+                                {/* User Info - Clickable to go to Profile */}
+                                <button
+                                    onClick={() => navigate('/profile')}
+                                    className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg border border-accent/30 hover:border-accent transition-colors cursor-pointer"
+                                >
                                     <User size={20} className="text-accent" />
                                     <div className="text-sm">
                                         <p className="text-light font-semibold">{user?.username}</p>
                                         <p className="text-gray-400 text-xs capitalize">{user?.role_name ? user.role_name.replace('_', ' ') : 'user'}</p>
                                     </div>
-                                </div>
+                                </button>
 
                                 {/* Dashboard Button (conditional based on role) */}
                                 {user?.role_name && (user.role_name.toLowerCase() === 'executive' || user.role_name.toLowerCase() === 'production') && (
@@ -117,14 +120,20 @@ export function Navigation() {
 
                         {isAuthenticated ? (
                             <>
-                                {/* Mobile User Info */}
-                                <div className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg border border-accent/30">
+                                {/* Mobile User Info - Clickable to go to Profile */}
+                                <button
+                                    onClick={() => {
+                                        navigate('/profile');
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-4 py-2 bg-primary rounded-lg border border-accent/30 hover:border-accent transition-colors cursor-pointer"
+                                >
                                     <User size={20} className="text-accent" />
                                     <div className="text-sm">
                                         <p className="text-light font-semibold">{user?.username}</p>
                                         <p className="text-gray-400 text-xs capitalize">{user?.role_name ? user.role_name.replace('_', ' ') : 'user'}</p>
                                     </div>
-                                </div>
+                                </button>
 
                                 {/* Mobile Dashboard Button */}
                                 {user?.role_name && (user.role_name.toLowerCase() === 'executive' || user.role_name.toLowerCase() === 'production') && (

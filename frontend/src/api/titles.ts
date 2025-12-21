@@ -11,10 +11,10 @@ export interface Title {
 
 export interface FilmCardData {
   title_id: string;
-  name: string;
-  start_year: number;
-  vote_average: number;
-  vote_count: number;
+  name: string | null;
+  start_year: number | null;
+  vote_average: number | null;
+  vote_count: number | null;
   genre_name: string;
 }
 
@@ -132,8 +132,8 @@ export const titlesAPI = {
     return response.data.data;
   },
 
-  searchTitles: async (keyword: string): Promise<SearchTitle[]> => {
-    const response = await axiosInstance.get(`/titles/search?q=${encodeURIComponent(keyword)}`);
+  searchTitles: async (keyword: string, limit: number = 20): Promise<SearchTitle[]> => {
+    const response = await axiosInstance.get(`/titles/search?q=${encodeURIComponent(keyword)}&limit=${limit}`);
     return response.data.data;
   },
 

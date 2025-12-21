@@ -576,8 +576,19 @@ func (r *TitleRepository) FilterTitles(
 
 		// Append ke slice
 		titles = append(titles, &title)
-		ratingStr := fmt.Sprintf("%.1f", title.VoteAverage)
-		fmt.Printf("✅ Found: %s (Rating: %s, Year: %d, Genre: %s)\n", title.Name, ratingStr, title.StartYear, title.GenreName)
+		nameStr := "Unknown"
+		if title.Name != nil {
+			nameStr = *title.Name
+		}
+		yearStr := "N/A"
+		if title.StartYear != nil {
+			yearStr = fmt.Sprintf("%d", *title.StartYear)
+		}
+		ratingStr := "N/A"
+		if title.VoteAverage != nil {
+			ratingStr = fmt.Sprintf("%.1f", *title.VoteAverage)
+		}
+		fmt.Printf("✅ Found: %s (Rating: %s, Year: %s, Genre: %s)\n", nameStr, ratingStr, yearStr, title.GenreName)
 	}
 
 	// Check error dari rows iteration
@@ -612,7 +623,7 @@ func (r *TitleRepository) GetFilterTitlesCount(
 ) (int, error) {
 	// Build query with proper parameter handling
 	query := `SELECT COUNT(*) FROM (
-		SELECT TOP 1000 t.title_id
+		SELECT TOP 200 t.title_id
 		FROM titles t`
 
 	where := " WHERE 1=1"

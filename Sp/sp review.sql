@@ -1,7 +1,7 @@
 ----------- Sp review 
 USE INTEGRASI_DB;
 GO
-CREATE TABLE Reviews (
+ALTER TABLE Reviews (
     review_id INT PRIMARY KEY IDENTITY(1,1),
 
     user_id INT NOT NULL,
@@ -47,3 +47,26 @@ GO
 CREATE INDEX IX_Reviews_TitleId ON Reviews(title_id);
 CREATE INDEX IX_Reviews_UserId ON Reviews(user_id);
 select * from Reviews
+
+CREATE OR ALTER PROCEDURE dbo.sp_user_reviews
+    @UserId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        r.review_id,
+        r.title_id,
+        t.name AS title_name,
+        r.rating,
+        r.review_text,
+        r.created_at,
+        r.updated_at
+    FROM Reviews r
+    JOIN titles t ON t.title_id = r.title_id
+    WHERE r.user_id = @UserId
+    ORDER BY r.created_at DESC;
+END
+GO
+
+EXEC dbo.sp_user_reviews @UserId = 7;

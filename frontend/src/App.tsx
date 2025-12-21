@@ -5,9 +5,11 @@ import { PageLoader } from './components/shared/PageLoader';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { TitleDetailPageNew } from './pages/TitleDetailPageNew';
 import { TitleDetailDebug } from './pages/TitleDetailDebug';
 import { FilterSearchPage } from './pages/FilterSearchPage';
+import { ArtistDetailPage } from './pages/ArtistDetailPage';
 import { ExecutiveDashboard } from './pages/ExecutiveDashboard';
 import { ProductionDashboard } from './pages/ProductionDashboard';
 import { ProtectedRoute } from './components/shared/ProtectedRoute';
@@ -26,8 +28,17 @@ function App() {
           <Route path="/search" element={<FilterSearchPage />} />
           <Route path="/titles/:id/debug" element={<TitleDetailDebug />} />
           <Route path="/titles/:id" element={<TitleDetailPageNew />} />
+          <Route path="/artists/:id" element={<ArtistDetailPage />} />
 
           {/* Protected Routes */}
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/executive/dashboard" 
             element={
