@@ -54,6 +54,7 @@ type AirDate struct {
 
 // CastCrew merepresentasikan cast dan crew
 type CastCrew struct {
+	PersonID      string  `json:"person_id"`
 	Ordering      *int    `json:"ordering"`
 	PersonName    *string `json:"person_name"`
 	JobCategory   *string `json:"job_category"`

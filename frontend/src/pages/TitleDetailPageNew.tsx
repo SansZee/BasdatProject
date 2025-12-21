@@ -337,6 +337,7 @@ function InfoTabContent({ detail }: { detail: TitleDetailResponse }) {
 }
 
 function CastTabContent({ detail }: { detail: TitleDetailResponse }) {
+    const navigate = useNavigate();
     const [showAll, setShowAll] = useState(false);
 
     const displayedCast = showAll
@@ -348,9 +349,10 @@ function CastTabContent({ detail }: { detail: TitleDetailResponse }) {
         <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {displayedCast.map((person, idx) => (
-                    <div
+                    <button
                         key={idx}
-                        className="p-4 bg-secondary border border-gray-600 rounded-lg hover:border-accent/50 transition-colors"
+                        onClick={() => navigate(`/artists/${person.person_id}/detail`)}
+                        className="p-4 bg-secondary border border-gray-600 rounded-lg hover:border-accent hover:bg-secondary/80 transition-colors cursor-pointer text-left w-full"
                     >
                         <p className="text-light font-semibold text-sm line-clamp-2">
                             {person.person_name || 'Unknown'}
@@ -363,7 +365,7 @@ function CastTabContent({ detail }: { detail: TitleDetailResponse }) {
                                 as {person.characters}
                             </p>
                         )}
-                    </div>
+                    </button>
                 ))}
             </div>
 

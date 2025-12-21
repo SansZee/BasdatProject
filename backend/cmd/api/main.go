@@ -81,6 +81,10 @@ func main() {
 	
 	// Executive dashboard routes
 	router.HandleFunc("/api/dashboard/kpi", executiveHandler.GetKPIMetrics).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/dashboard/best-titles", executiveHandler.GetBestTitles).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/dashboard/genre-trend", executiveHandler.GetGenreTrend).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/dashboard/summary-trend", executiveHandler.GetSummaryTrend).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/dashboard/top-companies", executiveHandler.GetTopCompanies).Methods("GET", "OPTIONS")
 	// Artist routes
 	router.HandleFunc("/api/artists/search", artistHandler.SearchArtists).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/artists/{id}/detail", artistHandler.GetArtistDetail).Methods("GET", "OPTIONS")

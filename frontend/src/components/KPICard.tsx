@@ -11,10 +11,10 @@ interface KPIMetrics {
   average_rating: {
     average_rating: number;
   };
-  best_title: {
-    name: string;
-    vote_average: number;
-    vote_count: number;
+  top_genre: {
+    genre_name: string;
+    total_title: number;
+    average_rating: number;
   };
 }
 
@@ -77,12 +77,7 @@ export default function KPICard({ companyID }: KPICardProps) {
     );
   }
 
-  const getTitleClass = (text: string) => {
-    if (text.length > 80) return 'text-lg';
-    if (text.length > 60) return 'text-2xl';
-    if (text.length > 40) return 'text-3xl';
-    return 'text-4xl';
-  };
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -144,32 +139,32 @@ export default function KPICard({ companyID }: KPICardProps) {
         </div>
       </div>
 
-      {/* Best Show Card */}
+      {/* Top Genre Card */}
       <div className="bg-gradient-to-br from-secondary to-primary border border-accent/30 rounded-lg shadow-lg p-6 hover:border-accent/60 transition-all flex flex-col">
         <div className="flex items-center justify-between mb-0">
           <h3 className="text-light/80 text-xs font-semibold uppercase tracking-wide">
-            Top Performer
+            Top Genre on Market
           </h3>
           <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
-            <span className="text-accent text-lg">🏆</span>
+            <span className="text-accent text-lg">🎬</span>
           </div>
         </div>
         <div className="flex items-center justify-center mb-0">
-          <p className={`${getTitleClass(kpi.best_title.name)} font-bold text-accent mb-4 line-clamp-2`}>
-            {kpi.best_title.name}
+          <p className="text-4xl font-bold text-accent mb-4">
+            {kpi.top_genre.genre_name}
           </p>
         </div>
         <div className="mt-auto pt-4 border-t border-accent/20 space-y-2">
           <div className="flex justify-between items-center bg-primary/50 p-2 rounded text-xs">
-            <span className="text-light/70">Quality</span>
+            <span className="text-light/70">Total Titles</span>
             <span className="font-bold text-accent">
-              {kpi.best_title.vote_average.toFixed(1)}/10
+              {kpi.top_genre.total_title}
             </span>
           </div>
           <div className="flex justify-between items-center bg-primary/50 p-2 rounded text-xs">
-            <span className="text-light/70">Votes</span>
+            <span className="text-light/70">Avg. Rating</span>
             <span className="font-bold text-accent">
-              {(kpi.best_title.vote_count / 1000).toFixed(1)}K
+              {kpi.top_genre.average_rating.toFixed(2)}/10
             </span>
           </div>
         </div>

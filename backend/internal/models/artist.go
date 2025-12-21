@@ -30,7 +30,6 @@ type ArtistTitle struct {
 	TypeID     string `json:"type_id"`
 	StartYear  *int   `json:"start_year"`
 	EndYear    *int   `json:"end_year"`
-	PosterURL  *string `json:"poster_url"`
 	Category   string `json:"category"`
 	Job        *string `json:"job"`
 	Characters *string `json:"characters"`

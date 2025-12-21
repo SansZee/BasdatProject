@@ -1,4 +1,4 @@
-﻿create unique index idx_ft_persons_person_id
+create unique index idx_ft_persons_person_id
 on persons(person_id)
 create fulltext catalog ft_artist_catalog
 as default
@@ -43,20 +43,27 @@ BEGIN
             p.person_id,
             p.primaryName,
             p.birthYear,
-            p.deathYear
+            p.deathYear,
+            0 AS total_titles,
+            0 AS total_votes,
+            0 AS avg_rating
         FROM persons p
         ORDER BY p.primaryName;
         RETURN;
     END;
 
-    DECLARE @search NVARCHAR(200);
-    SET @search = '"' + @keyword + '*"';
+    DECLARE @searchPattern NVARCHAR(200) = @keyword + '%';
 
-    ;WITH ft AS (
-        SELECT
-            ct.[KEY] AS person_id,
-            ct.RANK AS text_rank
-        FROM CONTAINSTABLE(persons, primaryName, @search) ct
+    -- Scan only matching persons, then join to aggregates
+    ;WITH matched_persons AS (
+        SELECT TOP (@limit)
+            p.person_id,
+            p.primaryName,
+            p.birthYear,
+            p.deathYear
+        FROM persons p
+        WHERE p.primaryName LIKE @searchPattern COLLATE Latin1_General_CI_AS
+        ORDER BY p.primaryName
     ),
     stats AS (
         SELECT
@@ -64,32 +71,25 @@ BEGIN
             COUNT(*) AS total_titles,
             SUM(ISNULL(t.vote_count, 0)) AS total_votes,
             AVG(NULLIF(t.vote_average, 0)) AS avg_rating
-        FROM title_principals tp
+        FROM matched_persons mp
+        JOIN title_principals tp ON tp.person_id = mp.person_id
         JOIN titles t ON t.title_id = tp.title_id
         GROUP BY tp.person_id
     )
-    SELECT TOP (@limit)
-        p.person_id,
-        p.primaryName,
-        p.birthYear,
-        p.deathYear,
+    SELECT
+        mp.person_id,
+        mp.primaryName,
+        mp.birthYear,
+        mp.deathYear,
         ISNULL(s.total_titles, 0) AS total_titles,
         ISNULL(s.total_votes, 0) AS total_votes,
         ISNULL(s.avg_rating, 0) AS avg_rating
-    FROM ft
-    JOIN persons p ON p.person_id = ft.person_id
-    LEFT JOIN stats s ON s.person_id = p.person_id
+    FROM matched_persons mp
+    LEFT JOIN stats s ON s.person_id = mp.person_id
     ORDER BY
-        /* 1️⃣ relevansi nama */
-        ft.text_rank DESC,
-        /* 2️⃣ popularitas publik */
         ISNULL(s.total_votes, 0) DESC,
-        /* 3️⃣ produktivitas */
         ISNULL(s.total_titles, 0) DESC,
-        /* 4️⃣ rating */
-        ISNULL(s.avg_rating, 0) DESC,
-        /* 5️⃣ fallback */
-        p.primaryName;
+        mp.primaryName;
 END;
 
 EXEC sp_search_artists @keyword = 'leonardo';
@@ -164,13 +164,14 @@ BEGIN
         t.name,
         t.startYear,
         t.endYear,
-        t.poster_url,
         t.vote_average,
         t.vote_count,
         t.popularity
     FROM known_for k
     INNER JOIN titles t
         ON k.title_id = t.title_id
+    INNER JOIN dbo.FilterTitles() ft
+        ON t.title_id = ft.title_id
     WHERE k.person_id = @person_id
     ORDER BY t.popularity DESC;
 END;
@@ -188,14 +189,16 @@ BEGIN
         t.type_id,
         t.startYear,
         t.endYear,
-        t.poster_url,
-        tp.category,
-        tp.job,
-        tp.characters
+        STRING_AGG(tp.category, ', ') AS category,
+        STRING_AGG(tp.job, ', ') AS job,
+        STRING_AGG(tp.characters, ', ') AS characters
     FROM title_principals tp
     INNER JOIN titles t
         ON tp.title_id = t.title_id
+    INNER JOIN dbo.FilterTitles() ft
+        ON t.title_id = ft.title_id
     WHERE tp.person_id = @person_id
+    GROUP BY tp.title_id, t.name, t.type_id, t.startYear, t.endYear
     ORDER BY t.startYear DESC;
 END;
 GO

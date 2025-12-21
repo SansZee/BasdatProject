@@ -133,7 +133,6 @@ func (r *ArtistRepository) GetArtistDetail(personID string) (*models.ArtistDetai
 	var knownFor []models.FilmCardData
 	for rows3.Next() {
 		var film models.FilmCardData
-		var posterURL *string
 		var startYear *int
 		var endYear *int
 		var popularity *float64
@@ -142,7 +141,6 @@ func (r *ArtistRepository) GetArtistDetail(personID string) (*models.ArtistDetai
 			&film.Name,
 			&startYear,
 			&endYear,
-			&posterURL,
 			&film.VoteAverage,
 			&film.VoteCount,
 			&popularity,
@@ -174,7 +172,6 @@ func (r *ArtistRepository) GetArtistDetail(personID string) (*models.ArtistDetai
 			&title.TypeID,
 			&startYear,
 			&endYear,
-			&title.PosterURL,
 			&title.Category,
 			&title.Job,
 			&title.Characters,

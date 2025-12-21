@@ -16,7 +16,6 @@ export interface ArtistTitle {
   type_id: string;
   start_year: number | null;
   end_year: number | null;
-  poster_url: string | null;
   category: string;
   job: string | null;
   characters: string | null;

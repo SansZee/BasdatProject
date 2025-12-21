@@ -28,6 +28,7 @@ function App() {
           <Route path="/search" element={<FilterSearchPage />} />
           <Route path="/titles/:id/debug" element={<TitleDetailDebug />} />
           <Route path="/titles/:id" element={<TitleDetailPageNew />} />
+          <Route path="/artists/:id/detail" element={<ArtistDetailPage />} />
           <Route path="/artists/:id" element={<ArtistDetailPage />} />
 
           {/* Protected Routes */}

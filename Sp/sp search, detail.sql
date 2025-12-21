@@ -201,10 +201,11 @@ BEGIN
     -- 8. CAST & CREW
     -----------------------------------------------------
     SELECT 
-        tp.ordering,
-        p.primaryName AS person_name,
-        tp.category AS job_category,
-        tp.characters
+       p.person_id,
+       tp.ordering,
+       p.primaryName AS person_name,
+       tp.category AS job_category,
+       tp.characters
     FROM title_principals tp
     JOIN persons p ON tp.person_id = p.person_id
     WHERE tp.title_id = @title_id

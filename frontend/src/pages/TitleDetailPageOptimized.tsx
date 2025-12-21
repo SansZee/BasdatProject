@@ -92,18 +92,23 @@ function Section({ title, children }: SectionProps) {
 
 // Cast Card Component
 interface CastCardProps {
+  personId: string;
   name: string;
   role: string;
   character?: string;
+  onNavigate: (personId: string) => void;
 }
 
-function CastCard({ name, role, character }: CastCardProps) {
+function CastCard({ personId, name, role, character, onNavigate }: CastCardProps) {
   return (
-    <div className="p-4 bg-secondary border border-gray-600 rounded hover:border-accent transition-colors">
+    <button
+      onClick={() => onNavigate(personId)}
+      className="p-4 bg-secondary border border-gray-600 rounded hover:border-accent hover:bg-secondary/80 transition-colors cursor-pointer text-left w-full"
+    >
       <p className="text-light font-semibold truncate">{name || 'Unknown'}</p>
       <p className="text-accent text-sm mb-2 truncate">{role || 'Unknown Role'}</p>
       {character && <p className="text-gray-400 text-sm italic truncate">as {character}</p>}
-    </div>
+    </button>
   );
 }
 
@@ -382,9 +387,11 @@ export function TitleDetailPageOptimized() {
               {displayedCast.map((person, idx) => (
                 <CastCard
                   key={idx}
+                  personId={person.person_id}
                   name={person.person_name || 'Unknown'}
                   role={person.job_category || 'Unknown Role'}
                   character={person.characters || undefined}
+                  onNavigate={(personId) => navigate(`/artists/${personId}/detail`)}
                 />
               ))}
             </div>

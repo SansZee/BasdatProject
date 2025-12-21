@@ -55,6 +55,7 @@ export interface TitleDetailResponse {
      episode_number: number | null;
    }>;
    cast_and_crew: Array<{
+     person_id: string;
      ordering: number | null;
      person_name: string | null;
      job_category: string | null;

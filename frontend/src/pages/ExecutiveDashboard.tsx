@@ -1,7 +1,15 @@
+import { useState } from 'react';
 import { Navigation } from '../components/shared/Navigation';
 import KPICard from '../components/KPICard';
+import { GenreTrendChart } from '../components/charts/GenreTrendChart';
+import { SummaryTrendChart } from '../components/charts/SummaryTrendChart';
+import { BestTitlesList } from '../components/DashboardCards/BestTitlesList';
+import { TopCompaniesList } from '../components/DashboardCards/TopCompaniesList';
+
+const COMPANY_ID = '11454';
 
 export function ExecutiveDashboard() {
+  const [companyRank, setCompanyRank] = useState<number | null>(null);
   return (
     <div className="min-h-screen bg-primary">
       <Navigation />
@@ -28,9 +36,9 @@ export function ExecutiveDashboard() {
       </div>
 
       {/* KPI Section */}
-      <div className="max-w-[1600px] mx-auto px-8 py-16">
+      <div className="max-w-[1600px] mx-auto px-8 py-8">
         {/* Section Title */}
-        <div className="mb-12">
+        <div className="mb-8">
           <h2 className="text-light text-3xl font-bold mb-2">
             Key Performance Indicators
           </h2>
@@ -41,11 +49,78 @@ export function ExecutiveDashboard() {
         </div>
 
         {/* KPI Cards */}
-        <KPICard companyID="11454" />
+        <KPICard companyID={COMPANY_ID} />
+      </div>
+
+      {/* Analytics Section - 2x2 Grid */}
+      <div className="max-w-[1600px] mx-auto px-8 py-8">
+        {/* Section Title */}
+        <div className="mb-8">
+          <h2 className="text-light text-3xl font-bold mb-2">
+            Detailed Analytics
+          </h2>
+          <div className="flex items-center gap-3 mt-4">
+            <div className="w-12 h-1 bg-gradient-to-r from-accent to-accent/30"></div>
+            <p className="text-light/60">Production trends and performance metrics</p>
+          </div>
+        </div>
+
+        {/* 2x2 Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Genre Trend Chart */}
+          <div className="bg-secondary/30 border border-accent/20 rounded-lg p-6 hover:border-accent/50 transition-colors">
+            <h3 className="text-light text-xl font-bold mb-6 flex items-center gap-2">
+              <span className="text-accent">📊</span>
+              Genre Trend Analysis
+            </h3>
+            <GenreTrendChart companyID={COMPANY_ID} />
+          </div>
+
+          {/* Summary Trend Chart */}
+          <div className="bg-secondary/30 border border-accent/20 rounded-lg p-6 hover:border-accent/50 transition-colors">
+            <h3 className="text-light text-xl font-bold mb-6 flex items-center gap-2">
+              <span className="text-accent">📈</span>
+              Production Summary Trend
+            </h3>
+            <SummaryTrendChart companyID={COMPANY_ID} />
+          </div>
+
+          {/* Best Titles */}
+          <div className="bg-secondary/30 border border-accent/20 rounded-lg p-6 hover:border-accent/50 transition-colors">
+            <h3 className="text-light text-xl font-bold mb-6 flex items-center gap-2">
+              <span className="text-accent">🎬</span>
+              Top Performing Titles
+            </h3>
+            <BestTitlesList companyID={COMPANY_ID} top={5} />
+          </div>
+
+          {/* Top Companies */}
+          <div className="bg-secondary/30 border border-accent/20 rounded-lg p-6 hover:border-accent/50 transition-colors">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-light text-xl font-bold flex items-center gap-2">
+                <span className="text-accent">🏆</span>
+                Top Production Companies
+              </h3>
+              {/* Warner Bros Rank Badge */}
+              {companyRank && (
+                <div className="bg-accent/20 px-3 py-1 rounded-full border border-accent/50">
+                  <p className="text-accent text-sm font-bold">
+                    Rank: <span className="text-lg">#{companyRank}</span>
+                  </p>
+                </div>
+              )}
+            </div>
+            <TopCompaniesList 
+              top={5} 
+              highlightCompanyID={COMPANY_ID}
+              onRankChange={setCompanyRank}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Footer Section */}
-      <div className="bg-secondary/50 border-t border-accent/20 py-12 mt-16">
+      <div className="bg-secondary/50 border-t border-accent/20 py-8 mt-16">
         <div className="max-w-[1600px] mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>

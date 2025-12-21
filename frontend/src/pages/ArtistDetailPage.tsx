@@ -233,58 +233,6 @@ export function ArtistDetailPage() {
                 </div>
               )}
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-accent/20">
-                      <th className="text-left py-4 px-4 text-accent font-semibold w-12">No</th>
-                      <th className="text-left py-4 px-4 text-accent font-semibold">Title</th>
-                      <th className="text-left py-4 px-4 text-accent font-semibold">Year</th>
-                      <th className="text-left py-4 px-4 text-accent font-semibold">Role</th>
-                      <th className="text-left py-4 px-4 text-accent font-semibold">Category</th>
-                      <th className="text-left py-4 px-4 text-accent font-semibold">Character</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {artistDetail.all_titles
-                      .filter(t => 
-                        !titlesSearchQuery ||
-                        t.name.toLowerCase().includes(titlesSearchQuery.toLowerCase()) ||
-                        t.job?.toLowerCase().includes(titlesSearchQuery.toLowerCase()) ||
-                        t.category?.toLowerCase().includes(titlesSearchQuery.toLowerCase()) ||
-                        t.characters?.toLowerCase().includes(titlesSearchQuery.toLowerCase())
-                      )
-                      .slice(0, 20)
-                      .map((title, index) => (
-                      <tr
-                        key={`${title.title_id}-${index}`}
-                        className="border-b border-secondary hover:bg-secondary/40 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/titles/${title.title_id}`)}
-                      >
-                        <td className="py-4 px-4 text-gray-400 text-sm font-semibold text-center">
-                          {index + 1}
-                        </td>
-                        <td className="py-4 px-4 text-light font-semibold hover:text-accent transition-colors line-clamp-2">
-                          {title.name}
-                        </td>
-                        <td className="py-4 px-4 text-gray-400 text-sm">
-                          {title.start_year || 'N/A'}
-                        </td>
-                        <td className="py-4 px-4 text-gray-400 text-sm">
-                          {title.job || 'N/A'}
-                        </td>
-                        <td className="py-4 px-4 text-gray-400 text-sm">
-                          {title.category || 'N/A'}
-                        </td>
-                        <td className="py-4 px-4 text-gray-400 text-sm line-clamp-2">
-                          {title.characters || 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
               {(() => {
                 const filteredTitles = artistDetail.all_titles.filter(t => 
                   !titlesSearchQuery ||
@@ -293,73 +241,65 @@ export function ArtistDetailPage() {
                   t.category?.toLowerCase().includes(titlesSearchQuery.toLowerCase()) ||
                   t.characters?.toLowerCase().includes(titlesSearchQuery.toLowerCase())
                 );
-                
-                return filteredTitles.length > 20 && (
-                  <>
-                    <button
-                      onClick={() => setShowAllTitles(!showAllTitles)}
-                      className="mt-6 flex items-center gap-2 px-4 py-2 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors font-semibold"
-                    >
-                      {showAllTitles ? (
-                        <>
-                          <ChevronUp size={20} />
-                          Show Less
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown size={20} />
-                          Show More ({filteredTitles.length - 20} more)
-                        </>
-                      )}
-                    </button>
 
-                    {showAllTitles && (
-                       <div className="mt-6 overflow-x-auto">
-                         <table className="w-full">
-                           <thead>
-                             <tr className="border-b border-accent/20">
-                               <th className="text-left py-4 px-4 text-accent font-semibold w-12">No</th>
-                               <th className="text-left py-4 px-4 text-accent font-semibold">Title</th>
-                               <th className="text-left py-4 px-4 text-accent font-semibold">Year</th>
-                               <th className="text-left py-4 px-4 text-accent font-semibold">Role</th>
-                               <th className="text-left py-4 px-4 text-accent font-semibold">Category</th>
-                               <th className="text-left py-4 px-4 text-accent font-semibold">Character</th>
-                             </tr>
-                           </thead>
-                           <tbody>
-                             {filteredTitles.slice(20).map((title, index) => (
-                             <tr
-                               key={`${title.title_id}-${index + 20}`}
-                               className="border-b border-secondary hover:bg-secondary/40 transition-colors cursor-pointer"
-                               onClick={() => navigate(`/titles/${title.title_id}`)}
-                             >
-                               <td className="py-4 px-4 text-gray-400 text-sm font-semibold text-center">
-                                 {index + 21}
-                               </td>
-                               <td className="py-4 px-4 text-light font-semibold hover:text-accent transition-colors line-clamp-2">
-                                 {title.name}
-                               </td>
-                               <td className="py-4 px-4 text-gray-400 text-sm">
-                                 {title.start_year || 'N/A'}
-                               </td>
-                               <td className="py-4 px-4 text-gray-400 text-sm">
-                                 {title.job || 'N/A'}
-                               </td>
-                               <td className="py-4 px-4 text-gray-400 text-sm">
-                                 {title.category || 'N/A'}
-                               </td>
-                               <td className="py-4 px-4 text-gray-400 text-sm line-clamp-2">
-                                 {title.characters || 'N/A'}
-                               </td>
-                             </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                        </>
-                        );
-                        })()}
+                return (
+                   <div className="overflow-x-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-secondary/30 [&::-webkit-scrollbar-thumb]:bg-accent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-accent/80" style={{ 
+                     maxHeight: '500px', 
+                     overflowY: 'auto',
+                     scrollbarWidth: 'thin',
+                     scrollbarColor: '#d4af37 #1a1a1a'
+                   }}>
+                     <table className="w-full" style={{ tableLayout: 'fixed' }}>
+                       <colgroup>
+                         <col style={{ width: '5%' }} />
+                         <col style={{ width: '35%' }} />
+                         <col style={{ width: '10%' }} />
+                         <col style={{ width: '12%' }} />
+                         <col style={{ width: '12%' }} />
+                         <col style={{ width: '26%' }} />
+                       </colgroup>
+                       <thead>
+                         <tr className="border-b border-accent/20 sticky top-0 bg-primary z-10">
+                           <th className="text-left py-4 px-4 text-accent font-semibold">No</th>
+                           <th className="text-left py-4 px-4 text-accent font-semibold">Title</th>
+                           <th className="text-left py-4 px-4 text-accent font-semibold">Year</th>
+                           <th className="text-left py-4 px-4 text-accent font-semibold">Role</th>
+                           <th className="text-left py-4 px-4 text-accent font-semibold">Category</th>
+                           <th className="text-left py-4 px-4 text-accent font-semibold">Character</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {filteredTitles.map((title, index) => (
+                           <tr
+                             key={`${title.title_id}-${index}`}
+                             className="border-b border-secondary hover:bg-secondary/40 transition-colors cursor-pointer"
+                             onClick={() => navigate(`/titles/${title.title_id}`)}
+                           >
+                             <td className="py-4 px-4 text-gray-400 text-sm font-semibold text-center">
+                               {index + 1}
+                             </td>
+                             <td className="py-4 px-4 text-light font-semibold hover:text-accent transition-colors line-clamp-2">
+                               {title.name}
+                             </td>
+                             <td className="py-4 px-4 text-gray-400 text-sm">
+                               {title.start_year || 'N/A'}
+                             </td>
+                             <td className="py-4 px-4 text-gray-400 text-sm">
+                               {title.job || 'N/A'}
+                             </td>
+                             <td className="py-4 px-4 text-gray-400 text-sm">
+                               {title.category || 'N/A'}
+                             </td>
+                             <td className="py-4 px-4 text-gray-400 text-sm line-clamp-2">
+                               {title.characters || 'N/A'}
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+                 );
+              })()}
                         </div>
                         )}
 

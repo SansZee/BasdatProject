@@ -453,7 +453,7 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 
 	// 8. Get cast and crew
 	fmt.Println("📊 QUERY 8: Cast & Crew")
-	query8 := `SELECT tp.ordering, p.primaryName AS person_name, tp.category AS job_category, tp.characters
+	query8 := `SELECT p.person_id, tp.ordering, p.primaryName AS person_name, tp.category AS job_category, tp.characters
     FROM title_principals tp
     JOIN persons p ON tp.person_id = p.person_id
     WHERE tp.title_id = @p1
@@ -468,6 +468,7 @@ func (r *TitleRepository) GetTitleDetail(titleID string) (*models.TitleDetailRes
 		for rows.Next() {
 			castCrew := &models.CastCrew{}
 			err := rows.Scan(
+				&castCrew.PersonID,
 				&castCrew.Ordering,
 				&castCrew.PersonName,
 				&castCrew.JobCategory,
