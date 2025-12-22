@@ -19,8 +19,19 @@ func NewExecutiveRepository(db *sql.DB) *ExecutiveRepository {
 	}
 }
 
-func (r *ExecutiveRepository) GetKPIMetrics(ctx context.Context, companyID string) (*models.KPIMetrics, error) {
-	rows, err := r.db.QueryContext(ctx, "EXEC sp_KPI_executive @p1", companyID)
+func (r *ExecutiveRepository) GetKPIMetrics(ctx context.Context, companyID string, year *int) (*models.KPIMetrics, error) {
+	var query string
+	var args []interface{}
+	
+	if year != nil {
+		query = "EXEC sp_KPI_executive @company_id = @p1, @max_year = @p2"
+		args = []interface{}{companyID, *year}
+	} else {
+		query = "EXEC sp_KPI_executive @company_id = @p1, @max_year = NULL"
+		args = []interface{}{companyID}
+	}
+	
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sp_KPI_executive: %w", err)
 	}
@@ -88,9 +99,19 @@ func (r *ExecutiveRepository) GetKPIMetrics(ctx context.Context, companyID strin
 }
 
 // GetBestTitles mengambil top titles untuk company berdasarkan rating & votes
-func (r *ExecutiveRepository) GetBestTitles(ctx context.Context, companyID string, top int) ([]models.BestTitle, error) {
-	query := `EXEC sp_best_title @p1, @p2`
-	rows, err := r.db.QueryContext(ctx, query, companyID, top)
+func (r *ExecutiveRepository) GetBestTitles(ctx context.Context, companyID string, top int, year *int) ([]models.BestTitle, error) {
+	var query string
+	var args []interface{}
+	
+	if year != nil {
+		query = `EXEC sp_best_title @company_id = @p1, @top = @p2, @max_year = @p3`
+		args = []interface{}{companyID, top, *year}
+	} else {
+		query = `EXEC sp_best_title @company_id = @p1, @top = @p2, @max_year = NULL`
+		args = []interface{}{companyID, top}
+	}
+	
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sp_best_title: %w", err)
 	}
@@ -115,7 +136,7 @@ func (r *ExecutiveRepository) GetBestTitles(ctx context.Context, companyID strin
 
 // GetGenreTrend mengambil genre trend data (votes per year)
 func (r *ExecutiveRepository) GetGenreTrend(ctx context.Context, companyID string) ([]models.GenreTrend, error) {
-	query := `EXEC sp_genre_trend @p1`
+	query := `EXEC sp_genre_trend @company_id = @p1, @max_year = NULL`
 	rows, err := r.db.QueryContext(ctx, query, companyID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sp_genre_trend: %w", err)
@@ -141,7 +162,7 @@ func (r *ExecutiveRepository) GetGenreTrend(ctx context.Context, companyID strin
 
 // GetSummaryTrend mengambil production summary trend (production count & rating per year)
 func (r *ExecutiveRepository) GetSummaryTrend(ctx context.Context, companyID string, yearRange int) ([]models.SummaryTrendItem, error) {
-	query := `EXEC sp_KPI_summary_trend @p1, @p2`
+	query := `EXEC sp_KPI_summary_trend @company_id = @p1, @year_range = @p2, @max_year = NULL`
 	rows, err := r.db.QueryContext(ctx, query, companyID, yearRange)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sp_KPI_summary_trend: %w", err)
@@ -171,7 +192,7 @@ func (r *ExecutiveRepository) GetSummaryTrend(ctx context.Context, companyID str
 
 // GetTopCompanies mengambil top production companies
 func (r *ExecutiveRepository) GetTopCompanies(ctx context.Context, top *int) ([]models.TopCompany, error) {
-	query := `EXEC sp_top_companies @p1`
+	query := `EXEC sp_top_companies @top = @p1`
 	rows, err := r.db.QueryContext(ctx, query, top)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sp_top_companies: %w", err)
@@ -197,4 +218,30 @@ func (r *ExecutiveRepository) GetTopCompanies(ctx context.Context, top *int) ([]
 	}
 
 	return companies, nil
+}
+
+// GetAvailableYears mengambil daftar tahun yang tersedia untuk company
+func (r *ExecutiveRepository) GetAvailableYears(ctx context.Context, companyID string) ([]int, error) {
+	query := `EXEC sp_get_all_years @company_id = @p1`
+	rows, err := r.db.QueryContext(ctx, query, companyID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute sp_get_all_years: %w", err)
+	}
+	defer rows.Close()
+
+	var years []int
+	for rows.Next() {
+		var year int
+		err := rows.Scan(&year)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan year: %w", err)
+		}
+		years = append(years, year)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating years: %w", err)
+	}
+
+	return years, nil
 }

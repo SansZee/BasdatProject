@@ -44,15 +44,19 @@ export interface TopCompany {
 }
 
 export const executiveAPI = {
-  getKPIMetrics: async (companyID: string): Promise<KPIMetrics> => {
-    const response = await axiosInstance.get(`/dashboard/kpi?company_id=${companyID}`);
+  getKPIMetrics: async (companyID: string, year?: number): Promise<KPIMetrics> => {
+    const url = year 
+      ? `/dashboard/kpi?company_id=${companyID}&year=${year}`
+      : `/dashboard/kpi?company_id=${companyID}`;
+    const response = await axiosInstance.get(url);
     return response.data.data;
   },
 
-  getBestTitles: async (companyID: string, top: number = 5): Promise<BestTitle[]> => {
-    const response = await axiosInstance.get(
-      `/dashboard/best-titles?company_id=${companyID}&top=${top}`
-    );
+  getBestTitles: async (companyID: string, top: number = 5, year?: number): Promise<BestTitle[]> => {
+    const url = year
+      ? `/dashboard/best-titles?company_id=${companyID}&top=${top}&year=${year}`
+      : `/dashboard/best-titles?company_id=${companyID}&top=${top}`;
+    const response = await axiosInstance.get(url);
     return response.data.data || [];
   },
 
@@ -71,6 +75,11 @@ export const executiveAPI = {
   getTopCompanies: async (top?: number): Promise<TopCompany[]> => {
     const url = top ? `/dashboard/top-companies?top=${top}` : `/dashboard/top-companies`;
     const response = await axiosInstance.get(url);
+    return response.data.data || [];
+  },
+
+  getAvailableYears: async (companyID: string): Promise<number[]> => {
+    const response = await axiosInstance.get(`/dashboard/available-years?company_id=${companyID}`);
     return response.data.data || [];
   },
 };

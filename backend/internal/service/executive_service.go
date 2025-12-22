@@ -25,14 +25,14 @@ func NewExecutiveService(executiveRepo *repository.ExecutiveRepository) *Executi
 // 1. Validate companyID
 // 2. Call repository untuk get metrics
 // 3. Return KPI response
-func (s *ExecutiveService) GetKPIMetrics(ctx context.Context, companyID string) (*models.KPIMetrics, error) {
+func (s *ExecutiveService) GetKPIMetrics(ctx context.Context, companyID string, year *int) (*models.KPIMetrics, error) {
 	// 1. Validate input
 	if companyID == "" {
 		return nil, fmt.Errorf("company_id is required")
 	}
 
 	// 2. Get metrics via repository
-	kpi, err := s.executiveRepo.GetKPIMetrics(ctx, companyID)
+	kpi, err := s.executiveRepo.GetKPIMetrics(ctx, companyID, year)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get KPI metrics: %w", err)
 	}
@@ -41,7 +41,7 @@ func (s *ExecutiveService) GetKPIMetrics(ctx context.Context, companyID string) 
 }
 
 // GetBestTitles mengambil best titles untuk company
-func (s *ExecutiveService) GetBestTitles(ctx context.Context, companyID string, top int) ([]models.BestTitle, error) {
+func (s *ExecutiveService) GetBestTitles(ctx context.Context, companyID string, top int, year *int) ([]models.BestTitle, error) {
 	if companyID == "" {
 		return nil, fmt.Errorf("company_id is required")
 	}
@@ -49,7 +49,7 @@ func (s *ExecutiveService) GetBestTitles(ctx context.Context, companyID string, 
 		top = 5
 	}
 	
-	titles, err := s.executiveRepo.GetBestTitles(ctx, companyID, top)
+	titles, err := s.executiveRepo.GetBestTitles(ctx, companyID, top, year)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get best titles: %w", err)
 	}
@@ -96,4 +96,18 @@ func (s *ExecutiveService) GetTopCompanies(ctx context.Context, top *int) ([]mod
 	}
 	
 	return companies, nil
+}
+
+// GetAvailableYears mengambil daftar tahun yang tersedia untuk company
+func (s *ExecutiveService) GetAvailableYears(ctx context.Context, companyID string) ([]int, error) {
+	if companyID == "" {
+		return nil, fmt.Errorf("company_id is required")
+	}
+	
+	years, err := s.executiveRepo.GetAvailableYears(ctx, companyID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get available years: %w", err)
+	}
+	
+	return years, nil
 }

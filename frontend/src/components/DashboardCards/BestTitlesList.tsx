@@ -4,9 +4,10 @@ import { executiveAPI, BestTitle } from '../../api/executive';
 interface Props {
   companyID: string;
   top?: number;
+  year?: number;
 }
 
-export function BestTitlesList({ companyID, top = 5 }: Props) {
+export function BestTitlesList({ companyID, top = 5, year }: Props) {
   const [titles, setTitles] = useState<BestTitle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +16,7 @@ export function BestTitlesList({ companyID, top = 5 }: Props) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await executiveAPI.getBestTitles(companyID, top);
+        const data = await executiveAPI.getBestTitles(companyID, top, year);
         setTitles(data);
         setError(null);
       } catch (err) {
@@ -29,7 +30,7 @@ export function BestTitlesList({ companyID, top = 5 }: Props) {
     if (companyID) {
       fetchData();
     }
-  }, [companyID, top]);
+  }, [companyID, top, year]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-80 text-light/60">Loading...</div>;

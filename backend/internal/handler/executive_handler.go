@@ -42,14 +42,23 @@ func (h *ExecutiveHandler) GetKPIMetrics(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 4. Call service untuk get KPI metrics
-	kpi, err := h.executiveService.GetKPIMetrics(r.Context(), companyID)
+	// 4. Get optional year parameter
+	yearStr := r.URL.Query().Get("year")
+	var year *int
+	if yearStr != "" {
+		yearVal := 0
+		fmt.Sscanf(yearStr, "%d", &yearVal)
+		year = &yearVal
+	}
+
+	// 5. Call service untuk get KPI metrics
+	kpi, err := h.executiveService.GetKPIMetrics(r.Context(), companyID, year)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, "Failed to get KPI metrics", err)
 		return
 	}
 
-	// 5. Return success response
+	// 6. Return success response
 	utils.WriteSuccess(w, "KPI metrics retrieved successfully", kpi)
 }
 
@@ -72,7 +81,15 @@ func (h *ExecutiveHandler) GetBestTitles(w http.ResponseWriter, r *http.Request)
 		fmt.Sscanf(topStr, "%d", &top)
 	}
 
-	titles, err := h.executiveService.GetBestTitles(r.Context(), companyID, top)
+	yearStr := r.URL.Query().Get("year")
+	var year *int
+	if yearStr != "" {
+		yearVal := 0
+		fmt.Sscanf(yearStr, "%d", &yearVal)
+		year = &yearVal
+	}
+
+	titles, err := h.executiveService.GetBestTitles(r.Context(), companyID, top, year)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, "Failed to get best titles", err)
 		return
@@ -153,4 +170,26 @@ func (h *ExecutiveHandler) GetTopCompanies(w http.ResponseWriter, r *http.Reques
 	}
 
 	utils.WriteSuccess(w, "Top companies retrieved successfully", companies)
+}
+
+// GetAvailableYears handler untuk endpoint GET /api/dashboard/available-years
+func (h *ExecutiveHandler) GetAvailableYears(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	companyID := r.URL.Query().Get("company_id")
+	if companyID == "" {
+		utils.WriteError(w, http.StatusBadRequest, "company_id parameter is required", nil)
+		return
+	}
+
+	years, err := h.executiveService.GetAvailableYears(r.Context(), companyID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, "Failed to get available years", err)
+		return
+	}
+
+	utils.WriteSuccess(w, "Available years retrieved successfully", years)
 }

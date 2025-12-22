@@ -86,6 +86,7 @@ func main() {
 	router.HandleFunc("/api/dashboard/genre-trend", executiveHandler.GetGenreTrend).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/dashboard/summary-trend", executiveHandler.GetSummaryTrend).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/dashboard/top-companies", executiveHandler.GetTopCompanies).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/dashboard/available-years", executiveHandler.GetAvailableYears).Methods("GET", "OPTIONS")
 	
 	// Production Dashboard routes
 	router.HandleFunc("/api/production-dashboard/status-distribution", productionDashboardHandler.GetStatusDistribution).Methods("GET", "OPTIONS")

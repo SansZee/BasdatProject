@@ -20,9 +20,10 @@ interface KPIMetrics {
 
 interface KPICardProps {
   companyID: string;
+  year?: number;
 }
 
-export default function KPICard({ companyID }: KPICardProps) {
+export default function KPICard({ companyID, year }: KPICardProps) {
   const [kpi, setKpi] = useState<KPIMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +32,10 @@ export default function KPICard({ companyID }: KPICardProps) {
     const fetchKPI = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/dashboard/kpi?company_id=${companyID}`
-        );
+        const url = year
+          ? `/api/dashboard/kpi?company_id=${companyID}&year=${year}`
+          : `/api/dashboard/kpi?company_id=${companyID}`;
+        const response = await fetch(url);
 
         if (!response.ok) {
           throw new Error("Failed to fetch KPI data");
@@ -53,7 +55,7 @@ export default function KPICard({ companyID }: KPICardProps) {
     if (companyID) {
       fetchKPI();
     }
-  }, [companyID]);
+  }, [companyID, year]);
 
   if (loading) {
     return (
