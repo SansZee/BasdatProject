@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { reviewsAPI, Review } from '../api/reviews';
 import { Star, Calendar, MessageCircle, ChevronRight } from 'lucide-react';
 
@@ -9,20 +10,30 @@ interface ReviewPanelProps {
 
 export function ReviewPanel({ userId }: ReviewPanelProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Hide reviews section for users 2 and 3
+  if (user && (user.user_id === 2 || user.user_id === 3)) {
+    return null;
+  }
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         setError(null);
-        console.log('Fetching reviews for userId:', userId);
+        console.log('ReviewPanel: Fetching reviews for userId:', userId);
         const data = await reviewsAPI.getUserReviews();
-        console.log('Reviews data:', data);
+        console.log('ReviewPanel: Reviews data received:', data);
+        console.log('ReviewPanel: Total reviews:', data?.length || 0);
+        if (data && data.length > 0) {
+          console.log('ReviewPanel: First review:', data[0]);
+        }
         setReviews(data);
       } catch (err) {
-        console.error('Failed to fetch reviews:', err);
+        console.error('ReviewPanel: Failed to fetch reviews:', err);
         setError('Failed to load your reviews');
       } finally {
         setLoading(false);
@@ -31,6 +42,27 @@ export function ReviewPanel({ userId }: ReviewPanelProps) {
 
     fetchReviews();
   }, [userId]);
+
+  // Refetch reviews when returning to profile page
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('ReviewPanel: Window focus event - refetching reviews');
+      const fetchReviews = async () => {
+        try {
+          setError(null);
+          const data = await reviewsAPI.getUserReviews();
+          console.log('ReviewPanel: Refetched reviews on focus:', data);
+          setReviews(data);
+        } catch (err) {
+          console.error('ReviewPanel: Failed to refetch reviews on focus:', err);
+        }
+      };
+      fetchReviews();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   const handleReviewClick = (review: Review) => {
     navigate(`/titles/${review.title_id}`, { state: { scrollToReviews: true } });

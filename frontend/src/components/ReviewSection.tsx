@@ -46,6 +46,11 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
             return;
         }
 
+        if (user.user_id === 2 || user.user_id === 3) {
+            setError('You do not have permission to submit reviews');
+            return;
+        }
+
         if (!reviewText.trim()) {
             setError('Please enter a review');
             return;
@@ -54,14 +59,18 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
         setIsSubmitting(true);
         try {
             setError(null);
+            console.log('Submitting review - UserID:', user.user_id, 'TitleID:', titleId, 'Rating:', rating);
             const newReview = await reviewsAPI.createReview(titleId, {
                 rating,
                 review_text: reviewText,
             });
 
+            console.log('Review created/updated successfully:', newReview);
+
             // Update review list - if user already had a review, replace it; otherwise add new
             const existingReviewIndex = reviews.findIndex(r => r.user_id === user.user_id);
             if (existingReviewIndex >= 0) {
+                console.log('Updating existing review at index:', existingReviewIndex);
                 const updatedReviews = [...reviews];
                 updatedReviews[existingReviewIndex] = {
                     review_id: newReview.review_id,
@@ -75,6 +84,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
                 };
                 setReviews(updatedReviews);
             } else {
+                console.log('Adding new review');
                 setReviews([
                     {
                         review_id: newReview.review_id,
@@ -93,6 +103,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
             // Clear form
             setRating(8);
             setReviewText('');
+            console.log('Review submission completed');
         } catch (err) {
             console.error('Failed to submit review:', err);
             setError('Failed to submit review.');
@@ -128,7 +139,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
             )}
 
             {/* Review Form */}
-            {user ? (
+            {user && user.user_id !== 2 && user.user_id !== 3 ? (
                 <form onSubmit={handleSubmitReview} className="bg-secondary border-2 border-accent/30 rounded-lg p-6 mb-8">
                     <h3 className="text-light text-lg font-bold mb-4">
                         Write a Review
@@ -183,7 +194,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
                         <span>{isSubmitting ? 'Submitting...' : 'Submit Review'}</span>
                     </button>
                 </form>
-            ) : (
+            ) : !user ? (
                 <div className="bg-secondary/50 border-2 border-accent/30 rounded-lg p-6 mb-8">
                     <p className="text-gray-400">
                         Please{' '}
@@ -193,7 +204,7 @@ export function ReviewSection({ titleId }: ReviewSectionProps) {
                         {' '}to write a review.
                     </p>
                 </div>
-            )}
+            ) : null}
 
             {/* Reviews List */}
             <div className="space-y-4">

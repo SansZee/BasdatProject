@@ -142,17 +142,6 @@ export function LoginPage() {
             </p>
           </form>
         </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-2 p-2 bg-secondary/50 rounded-lg border border-accent/20">
-          <p className="text-xs text-gray-400 font-semibold uppercase">Demo</p>
-          <div className="space-y-0.5 text-xs mt-1">
-            <div><span className="text-gray-400">Native:</span> <span className="text-accent">native_demo</span></div>
-            <div><span className="text-gray-400">Exec:</span> <span className="text-accent">exec_demo</span></div>
-            <div><span className="text-gray-400">Prod:</span> <span className="text-accent">prod_demo</span></div>
-            <div className="text-gray-400">Pass: Demo123!</div>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -145,11 +145,8 @@ func (r *ReviewRepository) GetReviewsByTitle(titleID string) ([]models.ReviewRes
 func (r *ReviewRepository) GetReviewsByUser(userID int) ([]models.ReviewResponse, error) {
 	query := `EXEC dbo.sp_user_reviews @UserId = @p1`
 
-	fmt.Printf("DEBUG: Executing GetReviewsByUser with userID: %d\n", userID)
-
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
-		fmt.Printf("DEBUG: Query error: %v\n", err)
 		return nil, fmt.Errorf("failed to get reviews by user: %w", err)
 	}
 	defer rows.Close()
@@ -157,31 +154,23 @@ func (r *ReviewRepository) GetReviewsByUser(userID int) ([]models.ReviewResponse
 	var reviews []models.ReviewResponse
 	for rows.Next() {
 		var review models.ReviewResponse
-		// Note: SP returns review_id, title_id, name (title_name), rating, review_text, created_at, updated_at
+		// SP returns exactly 7 fields: review_id, title_id, title_name, rating, review_text, created_at, updated_at
 		err := rows.Scan(
 			&review.ReviewID,
 			&review.TitleID,
-			&review.TitleName, // title_name from SP
+			&review.TitleName,
 			&review.Rating,
 			&review.ReviewText,
 			&review.CreatedAt,
 			&review.UpdatedAt,
 		)
 		if err != nil {
-			fmt.Printf("DEBUG: Scan error: %v\n", err)
 			return nil, fmt.Errorf("failed to scan review: %w", err)
 		}
-		// Set username and user_id from context (SP doesn't return these, but we can set them)
-		review.UserID = userID
-		review.Username = "" // This will be empty for now, you can update the SP to include it
-		fmt.Printf("DEBUG: Found review - ID: %d, Title: %s\n", review.ReviewID, review.TitleName)
 		reviews = append(reviews, review)
 	}
 
-	fmt.Printf("DEBUG: Total reviews found: %d\n", len(reviews))
-
 	if err = rows.Err(); err != nil {
-		fmt.Printf("DEBUG: Iteration error: %v\n", err)
 		return nil, fmt.Errorf("error iterating reviews: %w", err)
 	}
 

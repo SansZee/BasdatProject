@@ -59,11 +59,15 @@ func (h *ReviewHandler) CreateOrUpdateReview(w http.ResponseWriter, r *http.Requ
 	}
 
 	// 5. Call service untuk create/update review
+	fmt.Printf("[HANDLER] Creating/updating review - UserID: %d, TitleID: %s, Rating: %d\n", user.UserID, req.TitleID, req.Rating)
 	response, err := h.reviewService.CreateOrUpdateReview(user.UserID, req)
 	if err != nil {
+		fmt.Printf("[HANDLER] Error creating/updating review: %v\n", err)
 		utils.WriteError(w, http.StatusBadRequest, err.Error(), err)
 		return
 	}
+
+	fmt.Printf("[HANDLER] Review created/updated successfully - ReviewID: %d\n", response.ReviewID)
 
 	// 6. Return success response
 	utils.WriteSuccess(w, "Review created/updated successfully", response)
@@ -126,17 +130,12 @@ func (h *ReviewHandler) GetUserReviews(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("HANDLER: GetUserReviews called for userID: %d\n", user.UserID)
-
 	// 4. Call service untuk get user reviews
 	reviews, err := h.reviewService.GetReviewsByUser(user.UserID)
 	if err != nil {
-		fmt.Printf("HANDLER: Error from service: %v\n", err)
 		utils.WriteError(w, http.StatusInternalServerError, "Failed to fetch reviews", err)
 		return
 	}
-
-	fmt.Printf("HANDLER: Got %d reviews from service\n", len(reviews))
 
 	// 5. Return response
 	utils.WriteSuccess(w, "User reviews retrieved successfully", reviews)

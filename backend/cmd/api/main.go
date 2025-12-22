@@ -77,9 +77,6 @@ func main() {
 	router.HandleFunc("/api/titles/filter", titleHandler.FilterTitles).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/titles/{id}/detail", titleHandler.GetTitleDetail).Methods("GET", "OPTIONS")
 	
-	// Reviews public routes
-	router.HandleFunc("/api/reviews/{title}", reviewHandler.GetReviewsByTitle).Methods("GET", "OPTIONS")
-	
 	// Executive dashboard routes
 	router.HandleFunc("/api/dashboard/kpi", executiveHandler.GetKPIMetrics).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/dashboard/best-titles", executiveHandler.GetBestTitles).Methods("GET", "OPTIONS")
@@ -113,24 +110,32 @@ func main() {
 	// Logout endpoint (protected)
 	protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST", "OPTIONS")
 
-	// 11. Protected reviews routes (butuh JWT token) - MUST BE BEFORE PUBLIC REVIEWS ROUTE
-	protectedReviewRouter := router.PathPrefix("/api/reviews").Subrouter()
-	protectedReviewRouter.Use(middleware.Auth(authService))
-
-	// Create/Update review
-	protectedReviewRouter.HandleFunc("", reviewHandler.CreateOrUpdateReview).Methods("POST", "OPTIONS")
-
-	// Get user's reviews
-	protectedReviewRouter.HandleFunc("/user", reviewHandler.GetUserReviews).Methods("GET", "OPTIONS")
+	// 11. Protected reviews routes (butuh JWT token)
+	// ⚠️ CRITICAL FIX: Register specific paths FIRST to avoid catch-all pattern conflicts
+	// These routes are on the main router with Auth middleware wrapping the handler
+	
+	// Get user's reviews - REGISTER FIRST (specific path, before {title} catch-all)
+	router.HandleFunc("/api/reviews/user", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(authService)(http.HandlerFunc(reviewHandler.GetUserReviews)).ServeHTTP(w, r)
+	}).Methods("GET", "OPTIONS")
 	fmt.Println("✅ Registered route: GET /api/reviews/user (protected)")
 
-	// Check if user reviewed a title
-	protectedReviewRouter.HandleFunc("/check/{title}", reviewHandler.GetUserReviewForTitle).Methods("GET", "OPTIONS")
+	// Check if user reviewed a title - REGISTER SECOND (specific path with pattern)
+	router.HandleFunc("/api/reviews/check/{title}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(authService)(http.HandlerFunc(reviewHandler.GetUserReviewForTitle)).ServeHTTP(w, r)
+	}).Methods("GET", "OPTIONS")
 
-	// Delete review
-	protectedReviewRouter.HandleFunc("/{id}", reviewHandler.DeleteReview).Methods("DELETE", "OPTIONS")
+	// Create/Update review - POST to /api/reviews
+	router.HandleFunc("/api/reviews", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(authService)(http.HandlerFunc(reviewHandler.CreateOrUpdateReview)).ServeHTTP(w, r)
+	}).Methods("POST", "OPTIONS")
 
-	// Reviews public routes (AFTER protected routes to avoid path param conflict)
+	// Delete review - DELETE to /api/reviews/{id}
+	router.HandleFunc("/api/reviews/{id}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(authService)(http.HandlerFunc(reviewHandler.DeleteReview)).ServeHTTP(w, r)
+	}).Methods("DELETE", "OPTIONS")
+
+	// Get reviews by title - PUBLIC route (register LAST as catch-all)
 	router.HandleFunc("/api/reviews/{title}", reviewHandler.GetReviewsByTitle).Methods("GET", "OPTIONS")
 
 	// Health check endpoint (untuk monitoring)

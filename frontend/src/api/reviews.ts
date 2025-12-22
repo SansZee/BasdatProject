@@ -1,10 +1,12 @@
 import axiosInstance from '../utils/axios';
 
 // Type definitions
+// SP-based query returns: review_id, title_id, title_name, rating, review_text, created_at, updated_at
+// Direct SQL queries also return: user_id, username (optional fields)
 export interface Review {
   review_id: number;
-  user_id: number;
-  username: string;
+  user_id?: number;
+  username?: string;
   title_id: string;
   title_name?: string;
   rating: number;
@@ -21,8 +23,8 @@ export interface CreateReviewRequest {
 
 export interface ReviewResponse {
   review_id: number;
-  user_id: number;
-  username: string;
+  user_id?: number;
+  username?: string;
   title_id: string;
   title_name?: string;
   rating: number;

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Navigation } from '../components/shared/Navigation';
 import { FilmCard } from '../components/shared/FilmCard';
 import { ArtistCard } from '../components/shared/ArtistCard';
-import { Search, TrendingUp, Star, Film, Home, ArrowLeft, Users } from 'lucide-react';
+import { Search, TrendingUp, Star, Film, Home, ArrowLeft, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { titlesAPI, Title, SearchTitle } from '../api/titles';
 import { artistsAPI, ArtistCard as ArtistCardType } from '../api/artists';
@@ -19,6 +19,10 @@ export function HomePage() {
   const [trendingLoading, setTrendingLoading] = useState(true);
   const [topRatedLoading, setTopRatedLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Carousel refs
+  const trendingScrollRef = useRef<HTMLDivElement>(null);
+  const topRatedScrollRef = useRef<HTMLDivElement>(null);
   
   // Search state
     const [searchQuery, setSearchQuery] = useState('');
@@ -56,14 +60,14 @@ export function HomePage() {
       try {
         setError(null);
         
-        // Fetch trending titles
+        // Fetch trending titles (15 items for carousel)
         setTrendingLoading(true);
-        const trendingData = await titlesAPI.getTrendingTitles(6);
+        const trendingData = await titlesAPI.getTrendingTitles(15);
         setTrendingTitles(trendingData);
         
-        // Fetch top-rated titles
+        // Fetch top-rated titles (15 items for carousel)
         setTopRatedLoading(true);
-        const topRatedData = await titlesAPI.getTopRatedTitles(6);
+        const topRatedData = await titlesAPI.getTopRatedTitles(15);
         setTopRatedTitles(topRatedData);
       } catch (err) {
         console.error('Failed to fetch titles:', err);
@@ -240,30 +244,41 @@ export function HomePage() {
    };
 
    // STEP 7: USER CLICK SUGGESTION - handleSuggestionClick()
-      const handleSuggestionClick = (item: SearchTitle | ArtistCardType) => {
-        console.log('Suggestion clicked:', item);
-        setShowSuggestions(false);
-        
-        if (searchMode === 'film') {
-          const film = item as SearchTitle;
-          if (!film.title_id) {
-            console.error('title_id is null or undefined');
-            return;
-          }
-          navigate(`/titles/${film.title_id}`, { 
-            state: { from: 'search', query: searchQuery }
-          });
-        } else {
-          const artist = item as ArtistCardType;
-          if (!artist.person_id) {
-            console.error('person_id is null or undefined');
-            return;
-          }
-          navigate(`/artists/${artist.person_id}`, {
-            state: { from: 'search', query: searchQuery, mode: 'artist' }
-          });
-        }
-      };
+       const handleSuggestionClick = (item: SearchTitle | ArtistCardType) => {
+         console.log('Suggestion clicked:', item);
+         setShowSuggestions(false);
+         
+         if (searchMode === 'film') {
+           const film = item as SearchTitle;
+           if (!film.title_id) {
+             console.error('title_id is null or undefined');
+             return;
+           }
+           navigate(`/titles/${film.title_id}`, { 
+             state: { from: 'search', query: searchQuery }
+           });
+         } else {
+           const artist = item as ArtistCardType;
+           if (!artist.person_id) {
+             console.error('person_id is null or undefined');
+             return;
+           }
+           navigate(`/artists/${artist.person_id}`, {
+             state: { from: 'search', query: searchQuery, mode: 'artist' }
+           });
+         }
+       };
+
+       // Carousel scroll functions
+       const scrollCarousel = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+         if (ref.current) {
+           const scrollAmount = 400; // Scroll 400px per click
+           ref.current.scrollBy({
+             left: direction === 'left' ? -scrollAmount : scrollAmount,
+             behavior: 'smooth'
+           });
+         }
+       };
 
   return (
     <div className="w-full relative">
@@ -283,14 +298,14 @@ export function HomePage() {
           backgroundAttachment: 'fixed',
         }}
       >
-        {/* Color Grading Overlay - Dark Navy Tone */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0C1821]/80 via-[#1B2A41]/60 to-[#0C1821]/80 pointer-events-none"></div>
+        {/* Color Grading Overlay - Dark Navy Tone with Enhanced Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0C1821]/75 via-[#1B2A41]/50 to-[#0C1821]/85 pointer-events-none"></div>
 
         {/* Cool Tone Enhancement */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundColor: 'rgba(15, 27, 51, 0.3)',
+            backgroundColor: 'rgba(15, 27, 51, 0.25)',
             mixBlendMode: 'multiply',
           }}
         ></div>
@@ -580,11 +595,16 @@ export function HomePage() {
 
       {/* Trending Section */}
       {!hasSearched && (
-      <div className="pt-4 pb-3 bg-primary">
+      <div className="pt-8 pb-12 bg-primary border-t-2 border-accent">
         <div className="max-w-[1600px] mx-auto px-8">
-          <div className="flex items-center gap-3 mb-8">
-            <TrendingUp className="text-accent" size={32} />
-            <h3 className="text-light text-3xl font-bold">Trending Now</h3>
+          <div className="flex items-center gap-3 mb-10">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-10 bg-accent rounded-full"></div>
+              <div>
+                <h3 className="text-light text-3xl font-bold">Trending Now</h3>
+                <p className="text-gray-400 text-sm mt-1">Discover what's popular right now</p>
+              </div>
+            </div>
           </div>
           
           {error && (
@@ -598,17 +618,39 @@ export function HomePage() {
               <p className="text-gray-400">Loading trending titles...</p>
             </div>
           ) : trendingTitles.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {trendingTitles.map((title) => (
-                <FilmCard
-                  key={title.title_id}
-                  titleId={title.title_id}
-                  name={title.name}
-                  year={title.start_year}
-                  genre={title.genre_name}
-                  rating={title.vote_average}
-                />
-              ))}
+            <div className="relative group">
+              <div
+                ref={trendingScrollRef}
+                className="flex gap-6 overflow-x-auto pb-6 scroll-smooth [&::-webkit-scrollbar]:hidden snap-x snap-mandatory"
+              >
+                {trendingTitles.map((title) => (
+                  <div key={title.title_id} className="flex-shrink-0 w-48 snap-start">
+                    <FilmCard
+                      titleId={title.title_id}
+                      name={title.name}
+                      year={title.start_year}
+                      genre={title.genre_name}
+                      rating={title.vote_average}
+                    />
+                  </div>
+                ))}
+              </div>
+              {trendingTitles.length > 6 && (
+                <>
+                  <button
+                    onClick={() => scrollCarousel(trendingScrollRef, 'left')}
+                    className="absolute top-1/2 -left-6 transform -translate-y-1/2 p-3 bg-accent hover:bg-accent/80 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+                  >
+                    <ChevronLeft className="text-primary" size={24} />
+                  </button>
+                  <button
+                    onClick={() => scrollCarousel(trendingScrollRef, 'right')}
+                    className="absolute top-1/2 -right-6 transform -translate-y-1/2 p-3 bg-accent hover:bg-accent/80 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+                  >
+                    <ChevronRight className="text-primary" size={24} />
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="text-center py-12">
@@ -621,11 +663,16 @@ export function HomePage() {
 
       {/* Top Rated Section */}
       {!hasSearched && (
-      <div className="py-16 bg-secondary">
+      <div className="py-12 bg-secondary border-t-2 border-accent">
         <div className="max-w-[1600px] mx-auto px-8">
-          <div className="flex items-center gap-3 mb-8">
-            <Star className="text-accent fill-accent" size={32} />
-            <h3 className="text-light text-3xl font-bold">Top Rated</h3>
+          <div className="flex items-center gap-3 mb-10">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-10 bg-accent rounded-full"></div>
+              <div>
+                <h3 className="text-light text-3xl font-bold">Top Rated</h3>
+                <p className="text-gray-400 text-sm mt-1">The best-rated films and shows</p>
+              </div>
+            </div>
           </div>
           
           {topRatedLoading ? (
@@ -633,17 +680,39 @@ export function HomePage() {
               <p className="text-gray-400">Loading top-rated titles...</p>
             </div>
           ) : topRatedTitles.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {topRatedTitles.map((title) => (
-                <FilmCard
-                  key={title.title_id}
-                  titleId={title.title_id}
-                  name={title.name}
-                  year={title.start_year}
-                  genre={title.genre_name}
-                  rating={title.vote_average}
-                />
-              ))}
+            <div className="relative group">
+              <div
+                ref={topRatedScrollRef}
+                className="flex gap-6 overflow-x-auto pb-6 scroll-smooth [&::-webkit-scrollbar]:hidden snap-x snap-mandatory"
+              >
+                {topRatedTitles.map((title) => (
+                  <div key={title.title_id} className="flex-shrink-0 w-48 snap-start">
+                    <FilmCard
+                      titleId={title.title_id}
+                      name={title.name}
+                      year={title.start_year}
+                      genre={title.genre_name}
+                      rating={title.vote_average}
+                    />
+                  </div>
+                ))}
+              </div>
+              {topRatedTitles.length > 6 && (
+                <>
+                  <button
+                    onClick={() => scrollCarousel(topRatedScrollRef, 'left')}
+                    className="absolute top-1/2 -left-6 transform -translate-y-1/2 p-3 bg-accent hover:bg-accent/80 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+                  >
+                    <ChevronLeft className="text-primary" size={24} />
+                  </button>
+                  <button
+                    onClick={() => scrollCarousel(topRatedScrollRef, 'right')}
+                    className="absolute top-1/2 -right-6 transform -translate-y-1/2 p-3 bg-accent hover:bg-accent/80 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+                  >
+                    <ChevronRight className="text-primary" size={24} />
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="text-center py-12">
