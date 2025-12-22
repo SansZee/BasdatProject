@@ -52,6 +52,7 @@ func main() {
 	reviewHandler := handler.NewReviewHandler(reviewService)
 	executiveHandler := handler.NewExecutiveHandler(executiveService)
 	artistHandler := handler.NewArtistHandler(artistRepo)
+	productionDashboardHandler := handler.NewDashboardHandler(db)
 
 	// 6. Setup router
 	router := mux.NewRouter()
@@ -85,6 +86,17 @@ func main() {
 	router.HandleFunc("/api/dashboard/genre-trend", executiveHandler.GetGenreTrend).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/dashboard/summary-trend", executiveHandler.GetSummaryTrend).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/dashboard/top-companies", executiveHandler.GetTopCompanies).Methods("GET", "OPTIONS")
+	
+	// Production Dashboard routes
+	router.HandleFunc("/api/production-dashboard/status-distribution", productionDashboardHandler.GetStatusDistribution).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/production-dashboard/in-production", productionDashboardHandler.GetInProductionDetails).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/production-dashboard/planned-projects", productionDashboardHandler.GetPlannedProjects).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/production-dashboard/top-companies", productionDashboardHandler.GetTopProductionCompanies).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/production-dashboard/genre-distribution", productionDashboardHandler.GetGenreDistribution).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/production-dashboard/top-cast", productionDashboardHandler.GetTopCast).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/production-dashboard/summary", productionDashboardHandler.GetDashboardSummary).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/production-dashboard/titles-by-status", productionDashboardHandler.GetTitlesByStatus).Methods("GET", "OPTIONS")
+	
 	// Artist routes
 	router.HandleFunc("/api/artists/search", artistHandler.SearchArtists).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/artists/{id}/detail", artistHandler.GetArtistDetail).Methods("GET", "OPTIONS")
